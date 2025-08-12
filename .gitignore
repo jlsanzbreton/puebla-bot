@@ -1,0 +1,14 @@
+# Node-based static server cache/artifacts
+node_modules/
+.cache/
+dist/
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

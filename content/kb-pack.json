@@ -1,0 +1,197 @@
+{
+  "version": "2025.08.12-eca-v2",
+  "faqs": [
+    {
+      "q": "¿Aportaciones para las fiestas?",
+      "a": "Igual que el año pasado: menores de 4 años sin aportación; de 4 a 12 años, 5€; mayores de 13 años, 10€."
+    },
+    {
+      "q": "¿Precio de la cena del viernes (carrilleras)?",
+      "a": "13€ por persona (en la plaza)."
+    },
+    {
+      "q": "¿Precio de la tapa de migas del sábado?",
+      "a": "5€ por ración (venta mediante tickets)."
+    },
+    {
+      "q": "¿Precio de la paella del domingo en el río?",
+      "a": "13€ por persona."
+    },
+    {
+      "q": "¿Cómo instalar esta app en el móvil?",
+      "a": "En Android/Chrome verás 'Instalar app'. En iPhone/iPad, abre en Safari y usa 'Compartir' → 'Añadir a pantalla de inicio'."
+    }
+  ],
+  "events": [
+    {
+      "title": "Paseo guiado por el monte de Morón (José Luis)",
+      "date": "Jueves 09:00",
+      "place": "Salida: Plaza Mayor",
+      "desc": "Se recomienda llevar bocata o bebida para mitad del recorrido."
+    },
+    {
+      "title": "Pregón (Gaspar, por confirmar)",
+      "date": "Jueves 20:00",
+      "place": "Plaza Mayor",
+      "desc": "Apertura oficial de fiestas."
+    },
+    {
+      "title": "Ecapincho (1€)",
+      "date": "Jueves 20:30",
+      "place": "Plaza",
+      "desc": "Pincho de Eca (término inventado)."
+    },
+    {
+      "title": "Cine a la fresca (Rafa)",
+      "date": "Jueves 22:30",
+      "place": "Plaza / exterior",
+      "desc": "Proyección al aire libre (título por confirmar)."
+    },
+    {
+      "title": "Sesión de Yoga (Tere)",
+      "date": "Viernes 10:00",
+      "place": "Plaza / Centro cultural",
+      "desc": ""
+    },
+    {
+      "title": "Taller de pulseras (Tere y alguien más)",
+      "date": "Viernes 12:00",
+      "place": "Centro cultural",
+      "desc": ""
+    },
+    {
+      "title": "Campeonato de mus (Isabel, trofeo) y de rabino",
+      "date": "Viernes 18:00",
+      "place": "Bar / Plaza",
+      "desc": "Juego de cartas. Inscripción en el momento."
+    },
+    {
+      "title": "Gincana",
+      "date": "Viernes 18:30",
+      "place": "Plaza y alrededores",
+      "desc": "Para todas las edades."
+    },
+    {
+      "title": "Primera sesión de orquesta",
+      "date": "Viernes 20:00–21:30",
+      "place": "Plaza",
+      "desc": "Horario orientativo; puede variar."
+    },
+    {
+      "title": "Cena en la plaza (carrilleras)",
+      "date": "Viernes 21:30",
+      "place": "Plaza",
+      "desc": "Precio 13€ por persona."
+    },
+    {
+      "title": "Orquesta (2ª sesión) + bingo en el descanso",
+      "date": "Viernes 00:30–04:00",
+      "place": "Plaza",
+      "desc": "Bingo durante el descanso."
+    },
+    {
+      "title": "Misa con música y subasta de trenzas",
+      "date": "Sábado 12:00",
+      "place": "Iglesia / Plaza",
+      "desc": "Tras la misa, subasta de trenzas."
+    },
+    {
+      "title": "Vermut con música y gildas",
+      "date": "Sábado 13:00",
+      "place": "Plaza / Bar",
+      "desc": "Gildas a determinar unidades."
+    },
+    {
+      "title": "Campeonatos de guiñote, futbolín y ping pong",
+      "date": "Sábado 17:30",
+      "place": "Plaza / Centro cultural",
+      "desc": "Inscripciones in situ."
+    },
+    {
+      "title": "Juegos populares en la plaza",
+      "date": "Sábado 19:00",
+      "place": "Plaza",
+      "desc": "Definir pruebas (pañuelo, botella con la boca, pistolas de agua...)."
+    },
+    {
+      "title": "Mercadillo de artesanía / merchandising Puebla de Eca",
+      "date": "Sábado 20:00",
+      "place": "Plaza",
+      "desc": "Hablar con las hijas de Benita; venta de imanes de Virginie (5€ cada uno)."
+    },
+    {
+      "title": "DJ (1ª sesión)",
+      "date": "Sábado 20:30–22:00",
+      "place": "Plaza",
+      "desc": "Sesión musical."
+    },
+    {
+      "title": "Tapa de migas (tickets)",
+      "date": "Sábado 22:00",
+      "place": "Plaza",
+      "desc": "Precio 5€ por ración. Venta con talonario (comprar en los chinos)."
+    },
+    {
+      "title": "Bingo",
+      "date": "Sábado 23:30",
+      "place": "Plaza",
+      "desc": "Puede hacerse antes de la segunda sesión del DJ o en el descanso."
+    },
+    {
+      "title": "DJ (2ª sesión)",
+      "date": "Sábado 00:00–04:00",
+      "place": "Plaza",
+      "desc": "Sesión nocturna."
+    },
+    {
+      "title": "Comida en el río (paella)",
+      "date": "Domingo 14:00",
+      "place": "Río",
+      "desc": "Precio 13€ por persona. Este año sin embutido; se contratará paella y flan. Llevar bebidas y hielo (organizarlas)."
+    },
+    {
+      "title": "Campeonato de bolos, música y copeo",
+      "date": "Domingo 16:30",
+      "place": "Plaza / Río",
+      "desc": ""
+    },
+    {
+      "title": "Tortillas y postres",
+      "date": "Domingo 21:00",
+      "place": "Plaza",
+      "desc": "Habrá sorteos; comprar regalos. Ver nota de compra de bebidas y menaje."
+    },
+    {
+      "title": "Entrega de trofeos y bingo",
+      "date": "Domingo 22:00",
+      "place": "Plaza",
+      "desc": ""
+    }
+  ],
+  "articles": [
+    {
+      "title": "Puebla de Eca — Aportaciones de fiestas",
+      "body": "Aportaciones: menores de 4 años sin aportación; de 4 a 12 años, 5€; mayores de 13 años, 10€."
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Ayuntamiento de Puebla de Eca",
+      "role": "Información general",
+      "phone": "900 000 111",
+      "hours": "L-V 9:00–14:00"
+    },
+    {
+      "name": "Centro Cultural",
+      "role": "Reservas y actividades",
+      "phone": "900 000 222",
+      "hours": "L-V 17:00–20:00"
+    },
+    {
+      "name": "Fiestas Puebla de Eca",
+      "role": "Comisión de fiestas",
+      "phone": "(pendiente)",
+      "hours": "—"
+    }
+  ]
+}

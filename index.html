@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Puebla de Eca — Chat del Pueblo</title>
+  <meta name="theme-color" content="#0A0A0A"/>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="title">🤖 Puebla de Eca — Chat del Pueblo (Demo)</div>
+    <div id="install-controls" class="install-controls hidden">
+      <button id="install-btn">Instalar app</button>
+    </div>
+    <div id="ios-a2hs" class="ios-a2hs hidden">
+      <strong>iPhone/iPad:</strong> abre en Safari → Compartir → “Añadir a pantalla de inicio”
+      <button id="close-ios-tip">×</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Modo</h2>
+      <div class="mode-switch">
+        <button id="mode-workshop" class="active">Taller</button>
+        <button id="mode-pueblo">Pueblo</button>
+      </div>
+      <div class="status">
+        Estado: <span id="net-status">desconocido</span> • Contenido v<span id="content-version">—</span>
+        <button id="check-updates" class="outline small">Buscar actualizaciones</button>
+        <span id="update-available" class="badge hidden">Nueva versión</span>
+      </div>
+    </section>
+
+    <section id="workshop" class="card">
+      <h2>Retos del taller (offline)</h2>
+      <p>Elige un reto, rellena el contexto y genera un borrador. No hay IA generativa: funciona sin conexión con plantillas + búsqueda en la base local.</p>
+      <div class="grid">
+        <button class="tile" data-template="cartel">🎉 Cartel para evento</button>
+        <button class="tile" data-template="acta">📝 Resumen de acta</button>
+        <button class="tile" data-template="agricultor">🌾 Plan semanal agricultor</button>
+        <button class="tile" data-template="faq">❓ Crear una FAQ</button>
+      </div>
+      <div class="form">
+        <label>Contexto</label>
+        <textarea id="ctx" placeholder="Quién soy, recursos, datos locales…"></textarea>
+        <label>Objetivo</label>
+        <input id="goal" placeholder="Qué quiero obtener y para qué" />
+        <label>Restricciones</label>
+        <input id="limits" placeholder="Tiempo, presupuesto, datos disponibles…" />
+        <label>Formato</label>
+        <input id="format" placeholder="Lista, tabla, cartel, guion…" />
+        <label>Tono</label>
+        <input id="tone" placeholder="Cercano, formal, turístico…" />
+        <button id="generate">Generar borrador</button>
+      </div>
+      <div class="output">
+        <h3>Resultado</h3>
+        <pre id="result"></pre>
+        <button id="save-draft" class="outline">Guardar borrador (local)</button>
+      </div>
+    </section>
+
+    <section id="pueblo" class="card hidden">
+      <h2>Chat del pueblo (sin IA)</h2>
+      <p>Responde buscando en la base local (FAQ/Actas/Eventos). Funciona offline.</p>
+      <div class="chat">
+        <div class="messages" id="messages"></div>
+        <div class="composer">
+          <input id="q" placeholder="Escribe tu pregunta (ej. horario médico)"/>
+          <button id="ask">Preguntar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Contenido local</h2>
+      <div id="kb-summary" class="kb"></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <a href="privacy.html">Privacidad</a> · <a href="#" id="clear-storage">Borrar datos locales</a>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
