@@ -36,8 +36,9 @@ window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 updateOnlineStatus();
 
-// --- Service worker registration
-if ("serviceWorker" in navigator) {
+// --- Service worker registration (skip on localhost/dev)
+const isLocalhost = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
+if ("serviceWorker" in navigator && !isLocalhost) {
   window.addEventListener("load", async () => {
     try {
       const reg = await navigator.serviceWorker.register(SW_URL);
