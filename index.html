@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="theme-glass">
   <header class="app-header">
     <div class="title">🤖 Puebla de Eca — Chat del Pueblo (Demo)</div>
     <div id="install-controls" class="install-controls hidden">
@@ -21,7 +21,7 @@
   </header>
 
   <main class="container">
-    <section class="card">
+    <section class="card border-thick">
       <h2>Modo</h2>
       <div class="mode-switch">
         <button id="mode-workshop" class="active">Taller</button>
@@ -29,19 +29,21 @@
       </div>
       <div class="status">
         Estado: <span id="net-status">desconocido</span> • Contenido v<span id="content-version">—</span>
-        <button id="check-updates" class="outline small">Buscar actualizaciones</button>
-        <span id="update-available" class="badge hidden">Nueva versión</span>
+        <button id="check-updates" class="primary">Buscar actualizaciones</button>
+        <span id="update-available" class="badge hidden border-thick">Nueva versión</span>
+        <button id="toggle-glass" class="small outline">Vidrio</button>
+        <button id="toggle-contrast" class="small outline">Alto contraste</button>
       </div>
     </section>
 
-    <section id="workshop" class="card">
+    <section id="workshop" class="card border-thick">
       <h2>Retos del taller (offline)</h2>
       <p>Elige un reto, rellena el contexto y genera un borrador. No hay IA generativa: funciona sin conexión con plantillas + búsqueda en la base local.</p>
       <div class="grid">
-        <button class="tile" data-template="cartel">🎉 Cartel para evento</button>
-        <button class="tile" data-template="acta">📝 Resumen de acta</button>
-        <button class="tile" data-template="agricultor">🌾 Plan semanal agricultor</button>
-        <button class="tile" data-template="faq">❓ Crear una FAQ</button>
+        <button class="tile border-thick" data-template="cartel">🎉 Cartel para evento</button>
+        <button class="tile border-thick" data-template="acta">📝 Resumen de acta</button>
+        <button class="tile border-thick" data-template="agricultor">🌾 Plan semanal agricultor</button>
+        <button class="tile border-thick" data-template="faq">❓ Crear una FAQ</button>
       </div>
       <div class="form">
         <label>Contexto</label>
@@ -63,10 +65,10 @@
       </div>
     </section>
 
-    <section id="pueblo" class="card hidden">
+    <section id="pueblo" class="card border-thick hidden">
       <h2>Chat del pueblo (sin IA)</h2>
       <p>Responde buscando en la base local (FAQ/Actas/Eventos). Funciona offline.</p>
-      <div class="chat">
+      <div class="chat border-thick">
         <div class="messages" id="messages"></div>
         <div class="composer">
           <input id="q" placeholder="Escribe tu pregunta (ej. horario médico)"/>
@@ -75,7 +77,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card border-thick">
       <h2>Contenido local</h2>
       <div id="kb-summary" class="kb"></div>
     </section>

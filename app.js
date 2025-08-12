@@ -22,6 +22,8 @@ const els = {
   installBtn: document.getElementById("install-btn"),
   iosA2HS: document.getElementById("ios-a2hs"),
   iosClose: document.getElementById("close-ios-tip"),
+  toggleGlass: document.getElementById("toggle-glass"),
+  toggleContrast: document.getElementById("toggle-contrast"),
 };
 
 let kb = {version: "—", articles: [], events: [], faqs: [], contacts: []};
@@ -105,10 +107,10 @@ async function loadKB() {
 }
 function renderKBSummary() {
   const items = [];
-  items.push(`<div class="item"><strong>FAQ:</strong> ${kb.faqs.length}</div>`);
-  items.push(`<div class="item"><strong>Eventos:</strong> ${kb.events.length}</div>`);
-  items.push(`<div class="item"><strong>Artículos:</strong> ${kb.articles.length}</div>`);
-  items.push(`<div class="item"><strong>Contactos:</strong> ${kb.contacts.length}</div>`);
+  items.push(`<div class="item border-thick"><strong>FAQ:</strong> ${kb.faqs.length}</div>`);
+  items.push(`<div class="item border-thick"><strong>Eventos:</strong> ${kb.events.length}</div>`);
+  items.push(`<div class="item border-thick"><strong>Artículos:</strong> ${kb.articles.length}</div>`);
+  items.push(`<div class="item border-thick"><strong>Contactos:</strong> ${kb.contacts.length}</div>`);
   els.kb.innerHTML = items.join("");
 }
 
@@ -279,3 +281,15 @@ document.getElementById("clear-storage").addEventListener("click", async (e) => 
     alert("No se pudieron borrar los datos locales.");
   }
 });
+
+// UI toggles for visual variants
+if (els.toggleGlass) {
+  els.toggleGlass.addEventListener("click", () => {
+    document.body.classList.toggle("theme-glass");
+  });
+}
+if (els.toggleContrast) {
+  els.toggleContrast.addEventListener("click", () => {
+    document.body.classList.toggle("contrast-high");
+  });
+}
