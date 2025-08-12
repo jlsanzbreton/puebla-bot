@@ -2,34 +2,200 @@
 @tailwind components;
 @tailwind utilities;
 
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:#f7f7f5;color:#0a0a0a}
-.app-header,.app-footer{position:sticky;top:0;background:#0a0a0a;color:#fff;padding:.8rem 1rem;display:flex;align-items:center;gap:.5rem;z-index:10}
-.app-footer{top:auto;bottom:0;justify-content:center;background:#111;color:#ddd}
-.title{font-weight:700}
-.container{max-width:900px;margin:1rem auto;display:grid;gap:1rem;padding:0 1rem 4rem}
-.card{background:#fff;border:1px solid #e5e5e0;border-radius:16px;padding:1rem;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.mode-switch{display:flex;gap:.5rem;margin:.5rem 0}
-.mode-switch button{border:1px solid #ddd;background:#fafafa;padding:.5rem .8rem;border-radius:10px;cursor:pointer}
-.mode-switch button.active{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem;margin:.8rem 0}
-.tile{border:1px dashed #bbb;background:#fcfcfc;border-radius:12px;padding:1rem;text-align:left;cursor:pointer}
-.form label{display:block;margin:.5rem 0 .25rem}
-textarea,input{width:100%;padding:.6rem;border:1px solid #ddd;border-radius:10px}
-button{cursor:pointer;border:1px solid #0a0a0a;background:#0a0a0a;color:#fff;border-radius:10px;padding:.6rem 1rem}
-button.outline{background:#fff;color:#0a0a0a;border-color:#0a0a0a}
-button.small{padding:.3rem .6rem;font-size:.9rem}
-.status{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
-.badge{background:#ffe08a;color:#7a4d00;border-radius:999px;padding:.2rem .5rem}
-.hidden{display:none}
-.chat{border:1px solid #eee;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;height:380px}
-.messages{flex:1;overflow:auto;padding:1rem;background:#fafafa}
-.message{margin:.3rem 0;padding:.5rem .7rem;border-radius:10px;max-width:85%}
-.user{background:#e7f1ff;margin-left:auto}
-.bot{background:#eee}
-.composer{display:flex;gap:.5rem;padding:.5rem;border-top:1px solid #eee}
-.kb{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem}
-.kb .item{border:1px solid #eee;border-radius:10px;padding:.6rem;background:#fcfcfc}
-.install-controls,.ios-a2hs{margin-left:auto}
-.ios-a2hs{background:#fff1c2;color:#7a4d00;padding:.3rem .6rem;border-radius:8px;border:1px solid #f3d37a}
-.ios-a2hs button{margin-left:.5rem;background:transparent;color:#7a4d00;border:none;font-size:1rem}
+/* Default dark theme (coal + warm ivory/camel) */
+:root {
+  --bg: #0a0a0a;           /* coal */
+  --text: #ede6d6;         /* warm ivory */
+  --muted: #cbbfa6;        /* sand/muted */
+  --brand: #e3c07a;        /* camel accent */
+  --card-bg: #121212;      /* dark surface */
+  --border: #2a2a2a;       /* subtle border */
+  --tile-dashed: #3a3a3a;
+  --btn-bg: #1a1a1a;
+  --btn-border: #3a3a3a;
+  --btn-text: #ede6d6;
+  --outline-bg: transparent;
+  --outline-text: #ede6d6;
+  --outline-border: #444;
+  --badge-bg: #3b2b00;
+  --badge-text: #ffe08a;
+  --input-bg: #0f0f0f;
+  --input-border: #2f2f2f;
+  --placeholder: #7a766b;
+  --elev-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.app-header,
+.app-footer {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  color: var(--text);
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 10;
+}
+.app-footer {
+  top: auto;
+  bottom: 0;
+  justify-content: center;
+  background: #0c0c0c;
+  color: var(--muted);
+}
+.title {
+  font-weight: 700;
+}
+.container {
+  max-width: 900px;
+  margin: 1rem auto;
+  display: grid;
+  gap: 1rem;
+  padding: 0 1rem 4rem;
+}
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: var(--elev-shadow);
+}
+.mode-switch {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+.mode-switch button {
+  border: 1px solid var(--border);
+  background: #0f0f0f;
+  color: var(--text);
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.mode-switch button.active {
+  background: #000;
+  color: var(--text);
+  border-color: #000;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+.tile {
+  border: 1px dashed var(--tile-dashed);
+  background: #0f0f0f;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+.form label {
+  display: block;
+  margin: 0.5rem 0 0.25rem;
+}
+textarea,
+input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  border-radius: 10px;
+}
+textarea::placeholder,
+input::placeholder { color: var(--placeholder); }
+button {
+  cursor: pointer;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+}
+button.outline {
+  background: var(--outline-bg);
+  color: var(--outline-text);
+  border-color: var(--outline-border);
+}
+button.small {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.9rem;
+}
+.status {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.badge {
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+}
+.hidden {
+  display: none;
+}
+.chat {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 380px;
+  background: #0f0f0f;
+}
+.messages {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem;
+  background: #0f0f0f;
+}
+.message {
+  margin: 0.3rem 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+  max-width: 85%;
+}
+.user { background: #1f2937; margin-left: auto; color: var(--text); }
+.bot { background: #1a1a1a; color: var(--text); }
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-top: 1px solid var(--border);
+  background: #0f0f0f;
+}
+.kb {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem;
+}
+.kb .item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: #151515;
+  color: var(--text);
+}
+.install-controls,
+.ios-a2hs {
+  margin-left: auto;
+}
+.ios-a2hs { background: #32260a; color: #ffe08a; padding: 0.3rem 0.6rem; border-radius: 8px; border: 1px solid #5b4510; }
+.ios-a2hs button { margin-left: 0.5rem; background: transparent; color: #ffe08a; border: none; font-size: 1rem; }
+
+/* Links */
+a { color: var(--brand); }
