@@ -11,8 +11,7 @@
     "update:content": "node scripts/update-content.mjs"
   },
   "devDependencies": {
-    "vite": "^7.0.6",
-    "vite-plugin-pwa": "^0.20.0",
-    "serve": "^14.2.3"
+  "vite": "^7.1.2",
+  "serve": "^14.2.3"
   }
 }
