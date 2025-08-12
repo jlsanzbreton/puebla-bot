@@ -1,5 +1,5 @@
 // Service Worker: App Shell + content pack precache + offline fallback
-const CACHE_NAME = "pueblo-cache-v1";
+const CACHE_NAME = "pueblo-cache-v2";
 const PRECACHE = [
   "index.html",
   "offline.html",
@@ -42,11 +42,34 @@ self.addEventListener("fetch", (event) => {
     return url.pathname.startsWith(scopePath + "content/") || url.pathname.startsWith("/content/");
   };
 
+  // Helper: return a non-redirected clone (Safari workaround)
+  const deRedirect = async (response) => {
+    if (!response || !response.redirected) return response;
+    const body = await response.clone().blob();
+    return new Response(body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers
+    });
+  };
+
   // Navigation requests: App Shell
   if (req.mode === "navigate") {
-    event.respondWith(
-      caches.match("index.html").then((cached) => cached || fetch(req).catch(()=>caches.match("offline.html")))
-    );
+    event.respondWith((async () => {
+      try {
+        // Network-first for navigations to avoid returning a cached redirected response
+        const net = await fetch(req);
+        return net;
+      } catch (e) {
+        // Fallback to cached index.html or offline.html (ensure non-redirected)
+        const cache = await caches.open(CACHE_NAME);
+        const cachedIndex = await cache.match("index.html");
+        if (cachedIndex) return await deRedirect(cachedIndex);
+        const cachedOffline = await cache.match("offline.html");
+        if (cachedOffline) return await deRedirect(cachedOffline);
+        return new Response("Offline", { status: 503 });
+      }
+    })());
     return;
   }
 
@@ -55,8 +78,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cached = await cache.match(req);
-        const fetchAndUpdate = fetch(req).then((res) => {
-          if (res && res.ok) cache.put(req, res.clone());
+        const fetchAndUpdate = fetch(req).then(async (res) => {
+          if (res && res.ok) {
+            cache.put(req, res.clone());
+            return res;
+          }
+          // If 304 Not Modified, return cached when available
+          if (res && res.status === 304 && cached) return cached;
           return res;
         }).catch(()=>null);
         return cached || fetchAndUpdate || new Response("{}", {headers: {"Content-Type":"application/json"}});
