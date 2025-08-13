@@ -1,0 +1,452 @@
+{
+  "databaseName": "Event Registration System",
+  "description": "A database for managing event registrations with user profiles, participants, and payment tracking",
+  "extensions": [
+    "pgcrypto",
+    "uuid-ossp"
+  ],
+  "customTypes": [
+    {
+      "name": "payment_status",
+      "type": "enum",
+      "values": ["pending", "paid", "waived"]
+    }
+  ],
+  "tables": [
+    {
+      "name": "profiles",
+      "schema": "public",
+      "description": "User profiles linking to auth.users",
+      "rowLevelSecurity": true,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": ["primary key"],
+          "references": {"table": "auth.users", "column": "id", "onDelete": "cascade"},
+          "description": "User ID from auth.users"
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "constraints": ["unique"],
+          "description": "User email"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "description": "User's display name"
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "constraints": ["check (role in ('admin','user'))"],
+          "default": "'user'",
+          "description": "User role - admin or regular user"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "default": "now()",
+          "description": "Timestamp when profile was created"
+        }
+      ],
+      "policies": [
+        {
+          "name": "profiles self read",
+          "operation": "SELECT",
+          "using": "id = auth.uid() or public.auth_is_admin()",
+          "description": "Users can read their own profile or admins can read all profiles"
+        },
+        {
+          "name": "profiles self update",
+          "operation": "UPDATE",
+          "using": "id = auth.uid() or public.auth_is_admin()",
+          "description": "Users can update their own profile or admins can update all profiles"
+        }
+      ]
+    },
+    {
+      "name": "participants",
+      "schema": "public",
+      "description": "People who can be registered for events (children, grandparents, or self)",
+      "rowLevelSecurity": true,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": ["primary key"],
+          "default": "gen_random_uuid()",
+          "description": "Unique identifier for participant"
+        },
+        {
+          "name": "owner_user_id",
+          "type": "uuid",
+          "constraints": ["not null"],
+          "references": {"table": "public.profiles", "column": "id", "onDelete": "cascade"},
+          "description": "User who owns/manages this participant"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "constraints": ["not null"],
+          "description": "Display name of the participant"
+        },
+        {
+          "name": "birth_year",
+          "type": "int",
+          "description": "Year of birth"
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "description": "Additional notes about the participant"
+        },
+        {
+          "name": "deleted",
+          "type": "boolean",
+          "constraints": ["not null"],
+          "default": "false",
+          "description": "Soft delete flag"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "constraints": ["not null"],
+          "default": "now()",
+          "description": "Timestamp when participant was created"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "constraints": ["not null"],
+          "default": "now()",
+          "description": "Timestamp when participant was last updated"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "trg_participants_updated",
+          "timing": "BEFORE UPDATE",
+          "function": "public.touch_updated_at()",
+          "description": "Updates the updated_at timestamp on record modification"
+        }
+      ],
+      "policies": [
+        {
+          "name": "participants read owner/admin",
+          "operation": "SELECT",
+          "using": "owner_user_id = auth.uid() or public.auth_is_admin()",
+          "description": "Users can read their own participants or admins can read all"
+        },
+        {
+          "name": "participants insert owner",
+          "operation": "INSERT",
+          "withCheck": "owner_user_id = auth.uid()",
+          "description": "Users can only create participants they own"
+        },
+        {
+          "name": "participants update owner/admin",
+          "operation": "UPDATE",
+          "using": "owner_user_id = auth.uid() or public.auth_is_admin()",
+          "description": "Users can update their own participants or admins can update all"
+        },
+        {
+          "name": "participants delete owner/admin",
+          "operation": "DELETE",
+          "using": "owner_user_id = auth.uid() or public.auth_is_admin()",
+          "description": "Users can delete their own participants or admins can delete all"
+        }
+      ]
+    },
+    {
+      "name": "registrations",
+      "schema": "public",
+      "description": "Event registrations linking participants to events",
+      "rowLevelSecurity": true,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": ["primary key"],
+          "default": "gen_random_uuid()",
+          "description": "Unique identifier for registration"
+        },
+        {
+          "name": "event_id",
+          "type": "text",
+          "constraints": ["not null"],
+          "description": "External event identifier"
+        },
+        {
+          "name": "participant_id",
+          "type": "uuid",
+          "constraints": ["not null"],
+          "references": {"table": "public.participants", "column": "id", "onDelete": "restrict"},
+          "description": "Participant being registered"
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "uuid",
+          "constraints": ["not null"],
+          "references": {"table": "public.profiles", "column": "id", "onDelete": "cascade"},
+          "description": "User who created this registration"
+        },
+        {
+          "name": "payment_status",
+          "type": "payment_status",
+          "constraints": ["not null"],
+          "default": "'pending'",
+          "description": "Current payment status (pending, paid, waived)"
+        },
+        {
+          "name": "payment_amount",
+          "type": "numeric(10,2)",
+          "description": "Amount to pay/paid"
+        },
+        {
+          "name": "payment_method",
+          "type": "text",
+          "constraints": ["check (payment_method in ('cash','bizum','other'))"],
+          "description": "Method of payment if paid"
+        },
+        {
+          "name": "is_confirmed",
+          "type": "boolean",
+          "constraints": ["not null"],
+          "default": "true",
+          "description": "Whether registration is confirmed"
+        },
+        {
+          "name": "deleted",
+          "type": "boolean",
+          "constraints": ["not null"],
+          "default": "false",
+          "description": "Soft delete flag"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "constraints": ["not null"],
+          "default": "now()",
+          "description": "Timestamp when registration was created"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "constraints": ["not null"],
+          "default": "now()",
+          "description": "Timestamp when registration was last updated"
+        }
+      ],
+      "constraints": [
+        {
+          "type": "unique",
+          "columns": ["event_id", "participant_id"],
+          "description": "Prevents duplicate registrations for same participant and event"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_reg_event",
+          "columns": ["event_id"],
+          "description": "Index for faster event-based queries"
+        },
+        {
+          "name": "idx_reg_created_by",
+          "columns": ["created_by_user_id"],
+          "description": "Index for faster creator-based queries"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "trg_registrations_updated",
+          "timing": "BEFORE UPDATE",
+          "function": "public.touch_updated_at()",
+          "description": "Updates the updated_at timestamp on record modification"
+        }
+      ],
+      "policies": [
+        {
+          "name": "registrations read scoped",
+          "operation": "SELECT",
+          "using": "created_by_user_id = auth.uid() or participant_id in (select id from public.participants where owner_user_id = auth.uid()) or public.auth_is_admin()",
+          "description": "Users can read registrations they created or for participants they own; admins can read all"
+        },
+        {
+          "name": "registrations insert by owner",
+          "operation": "INSERT",
+          "withCheck": "created_by_user_id = auth.uid() and participant_id in (select id from public.participants where owner_user_id = auth.uid())",
+          "description": "Users can only register participants they own"
+        },
+        {
+          "name": "registrations update admin only",
+          "operation": "UPDATE",
+          "using": "public.auth_is_admin()",
+          "description": "Only admins can update registrations"
+        },
+        {
+          "name": "registrations delete by creator",
+          "operation": "DELETE",
+          "using": "created_by_user_id = auth.uid() or public.auth_is_admin()",
+          "description": "Users can delete registrations they created; admins can delete any"
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "v_participants_live",
+      "schema": "public",
+      "definition": "SELECT * FROM public.participants WHERE deleted = false",
+      "description": "Non-deleted participants for incremental pull"
+    },
+    {
+      "name": "v_registrations_live",
+      "schema": "public",
+      "definition": "SELECT * FROM public.registrations WHERE deleted = false",
+      "description": "Non-deleted registrations for incremental pull"
+    }
+  ],
+  "functions": [
+    {
+      "name": "touch_updated_at",
+      "schema": "public",
+      "returns": "trigger",
+      "language": "plpgsql",
+      "description": "Updates the updated_at column with the current timestamp",
+      "definition": "BEGIN\n  new.updated_at := now();\n  return new;\nEND;",
+      "securityDefiner": false
+    },
+    {
+      "name": "auth_is_admin",
+      "schema": "public",
+      "returns": "boolean",
+      "language": "sql",
+      "stable": true,
+      "description": "Checks if the current user has admin role",
+      "definition": "SELECT exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')",
+      "securityDefiner": false
+    },
+    {
+      "name": "api_register",
+      "schema": "public",
+      "returns": "public.registrations",
+      "language": "plpgsql",
+      "parameters": [
+        {"name": "p_event_id", "type": "text"},
+        {"name": "p_participant_id", "type": "uuid"},
+        {"name": "p_amount", "type": "numeric", "default": "null"}
+      ],
+      "description": "Registers a participant for an event with idempotent behavior (upsert)",
+      "securityDefiner": true,
+      "searchPath": "public",
+      "definition": "DECLARE\n  v_owner uuid;\n  v_row public.registrations;\nBEGIN\n  select owner_user_id into v_owner from public.participants where id = p_participant_id and deleted = false;\n  if v_owner is null or v_owner <> auth.uid() then\n    raise exception 'participant not owned by user' using errcode = '42501';\n  end if;\n\n  insert into public.registrations(event_id, participant_id, created_by_user_id, payment_amount)\n  values (p_event_id, p_participant_id, auth.uid(), p_amount)\n  on conflict (event_id, participant_id) do update\n    set payment_amount = coalesce(excluded.payment_amount, public.registrations.payment_amount),\n        deleted = false\n  returning * into v_row;\n\n  return v_row;\nEND;"
+    },
+    {
+      "name": "api_cancel_registration",
+      "schema": "public",
+      "returns": "void",
+      "language": "plpgsql",
+      "parameters": [
+        {"name": "p_registration_id", "type": "uuid"}
+      ],
+      "description": "Cancels (soft deletes) a registration if user is creator or admin",
+      "securityDefiner": true,
+      "searchPath": "public",
+      "definition": "DECLARE\n  v_created_by uuid;\nBEGIN\n  select created_by_user_id into v_created_by from public.registrations where id = p_registration_id;\n  if v_created_by is null then\n    raise exception 'not found';\n  end if;\n  if v_created_by <> auth.uid() and not public.auth_is_admin() then\n    raise exception 'forbidden' using errcode = '42501';\n  end if;\n  update public.registrations set deleted = true where id = p_registration_id;\nEND;"
+    },
+    {
+      "name": "api_mark_paid",
+      "schema": "public",
+      "returns": "public.registrations",
+      "language": "plpgsql",
+      "parameters": [
+        {"name": "p_registration_id", "type": "uuid"},
+        {"name": "p_method", "type": "text", "default": "'cash'"},
+        {"name": "p_amount", "type": "numeric", "default": "null"}
+      ],
+      "description": "Marks a registration as paid (admin only)",
+      "securityDefiner": true,
+      "searchPath": "public",
+      "definition": "DECLARE\n  v_row public.registrations;\nBEGIN\n  if not public.auth_is_admin() then\n    raise exception 'admin only' using errcode = '42501';\n  end if;\n  update public.registrations\n    set payment_status = 'paid',\n        payment_method = coalesce(p_method, payment_method),\n        payment_amount = coalesce(p_amount, payment_amount),\n        deleted = false\n  where id = p_registration_id\n  returning * into v_row;\n  return v_row;\nEND;"
+    }
+  ],
+  "permissions": [
+    {
+      "object": "function public.api_register(text, uuid, numeric)",
+      "grantee": "authenticated",
+      "privileges": ["EXECUTE"],
+      "description": "Allows authenticated users to register participants for events"
+    },
+    {
+      "object": "function public.api_cancel_registration(uuid)",
+      "grantee": "authenticated",
+      "privileges": ["EXECUTE"],
+      "description": "Allows authenticated users to cancel registrations"
+    },
+    {
+      "object": "function public.api_mark_paid(uuid, text, numeric)",
+      "grantee": "authenticated",
+      "privileges": ["EXECUTE"],
+      "description": "Allows authenticated users to mark registrations as paid (function has internal admin check)"
+    }
+  ],
+  "securityModel": {
+    "description": "Row Level Security with role-based access",
+    "roles": [
+      {
+        "name": "authenticated",
+        "description": "Logged-in users with basic access to own data"
+      },
+      {
+        "name": "anon",
+        "description": "Anonymous users with no special access"
+      },
+      {
+        "name": "admin",
+        "description": "Application-level role for users with profile.role='admin'"
+      }
+    ],
+    "authFunction": "auth_is_admin() - Determines if current user has admin privileges",
+    "accessPatterns": [
+      "Users can only view and modify their own profile data unless they're admins",
+      "Users can create, view, update, and delete participants they own",
+      "Users can only create registrations for participants they own",
+      "Only admins can update registration details",
+      "Registrations can be viewed by the creator or owner of the participant"
+    ]
+  },
+  "businessRules": [
+    "Each participant belongs to a single owner (user)",
+    "Participants can register for multiple events",
+    "Each participant can only be registered once per event",
+    "Payments can be in cash, bizum, or other methods",
+    "Payment status tracks pending, paid, or waived status",
+    "Only admins can mark registrations as paid",
+    "Soft deletion is used for participants and registrations"
+  ],
+  "apiEndpoints": [
+    {
+      "name": "api_register",
+      "description": "Registers a participant for an event with idempotent behavior",
+      "parameters": ["event_id", "participant_id", "amount (optional)"],
+      "returns": "The created or updated registration record",
+      "permissions": "Authenticated users (for their own participants only)"
+    },
+    {
+      "name": "api_cancel_registration",
+      "description": "Cancels (soft deletes) a registration",
+      "parameters": ["registration_id"],
+      "returns": "void",
+      "permissions": "Registration creator or admins only"
+    },
+    {
+      "name": "api_mark_paid",
+      "description": "Marks a registration as paid",
+      "parameters": ["registration_id", "payment_method (default: cash)", "amount (optional)"],
+      "returns": "The updated registration record",
+      "permissions": "Admins only"
+    }
+  ]
+}

@@ -3,6 +3,27 @@ const VERSION_URL = "content/version.json";
 const KB_URL = "content/kb-pack.json";
 const SW_URL = "sw.js";
 
+// Early-load Supabase client so it can parse magic-link tokens from the URL
+// before any hash navigation happens, then clean the URL and go to Fiestas.
+let supaMod;
+try {
+  supaMod = await import("/src/core/api/supabase.ts");
+} catch {}
+
+async function processSupabaseRedirect() {
+  const h = location.hash || "";
+  // Supabase magic-link places tokens in the hash (e.g. #access_token=...)
+  if (!/#.*(access_token|refresh_token|type=)/i.test(h)) return;
+  try {
+    // Ensure session is initialized (constructor processes the hash)
+    if (supaMod?.supa) await supaMod.supa.auth.getSession();
+  } catch {}
+  // Clean URL and route to fiestas
+  const target = location.origin + location.pathname + "#/fiestas";
+  history.replaceState({}, "", target);
+}
+await processSupabaseRedirect();
+
 const els = {
   net: document.getElementById("net-status"),
   cver: document.getElementById("content-version"),
@@ -13,8 +34,11 @@ const els = {
   saveDraft: document.getElementById("save-draft"),
   modeWorkshop: document.getElementById("mode-workshop"),
   modePueblo: document.getElementById("mode-pueblo"),
+  modeFiesta: document.getElementById("mode-fiesta"),
   sectionWorkshop: document.getElementById("workshop"),
   sectionPueblo: document.getElementById("pueblo"),
+  sectionFiestas: document.getElementById("fiestas"),
+  fiestasRoot: document.getElementById("fiestas-root"),
   messages: document.getElementById("messages"),
   q: document.getElementById("q"),
   ask: document.getElementById("ask"),
@@ -157,17 +181,49 @@ function setMode(mode) {
   if (mode === "workshop") {
     els.sectionWorkshop.classList.remove("hidden");
     els.sectionPueblo.classList.add("hidden");
+    els.sectionFiestas.classList.add("hidden");
     els.modeWorkshop.classList.add("active");
     els.modePueblo.classList.remove("active");
+    els.modeFiesta && els.modeFiesta.classList.remove("active");
   } else {
     els.sectionWorkshop.classList.add("hidden");
     els.sectionPueblo.classList.remove("hidden");
+    els.sectionFiestas.classList.add("hidden");
     els.modeWorkshop.classList.remove("active");
     els.modePueblo.classList.add("active");
   }
 }
 els.modeWorkshop.addEventListener("click", () => setMode("workshop"));
 els.modePueblo.addEventListener("click", () => setMode("pueblo"));
+
+// Router for fiestas
+async function showFiestas() {
+  els.sectionWorkshop.classList.add("hidden");
+  els.sectionPueblo.classList.add("hidden");
+  els.sectionFiestas.classList.remove("hidden");
+  els.modeWorkshop.classList.remove("active");
+  els.modePueblo.classList.remove("active");
+  els.modeFiesta && els.modeFiesta.classList.add("active");
+  if (els.fiestasRoot && !els.fiestasRoot.dataset.mounted) {
+    try {
+  const mod = await import("/src/pages/fiestas.ts");
+      await mod.mountFiestasPage(els.fiestasRoot);
+      els.fiestasRoot.dataset.mounted = "1";
+    } catch (e) { console.error(e); alert("No se pudo cargar Fiestas."); }
+  }
+}
+
+if (els.modeFiesta) {
+  els.modeFiesta.addEventListener("click", () => {
+    location.hash = "#/fiestas";
+    showFiestas();
+  });
+}
+
+window.addEventListener("hashchange", () => {
+  if (location.hash === "#/fiestas") showFiestas();
+});
+if (location.hash === "#/fiestas") showFiestas();
 
 // --- Simple "chat" over KB (keyword search)
 function addMsg(text, who="bot") {

@@ -4,17 +4,23 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
+    "dev": "vite",
+    "build": "vite build",
     "preview": "vite preview --port 5173",
     "start": "serve -s dist -l 5173",
-    "update:content": "node scripts/update-content.mjs"
+  "update:content": "node scripts/update-content.mjs",
+  "typecheck": "tsc -p . --noEmit"
   },
   "devDependencies": {
-  "vite": "^7.1.2",
-  "serve": "^14.2.3",
-  "tailwindcss": "^3.4.10",
-  "autoprefixer": "^10.4.20",
-  "postcss": "^8.4.41"
+    "autoprefixer": "^10.4.20",
+  "typescript": "^5.5.4",
+    "postcss": "^8.4.41",
+    "serve": "^14.2.3",
+    "tailwindcss": "^3.4.10",
+    "vite": "^7.1.2"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.55.0",
+    "dexie": "^4.0.11"
   }
 }
