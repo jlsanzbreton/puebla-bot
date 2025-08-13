@@ -99,11 +99,6 @@ function wireLogin(root: HTMLElement) {
 function layoutHTML(session: Session) {
   return `
   <div class="card">
-    <div class="mode-switch" style="margin-bottom:.6rem">
-      <button onclick="location.hash='#/'">Taller</button>
-      <button onclick="location.hash='#/chat'">Chat</button>
-      <button class="active">Fiestas</button>
-    </div>
     <div class="status" style="gap:.6rem">
       <span class="badge">Hola, ${escapeHTML(session.displayName)} (${session.role})</span>
       <button id="btnSync" class="outline small">Sincronizar</button>

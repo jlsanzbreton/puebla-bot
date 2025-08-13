@@ -103,6 +103,10 @@ let deferredPrompt;
 function updateOnlineStatus() {
   const online = navigator.onLine;
   els.net.textContent = online ? "online" : "offline";
+  els.net.classList.add("badge","border-thick");
+  els.net.classList.toggle("ok", online);
+  els.net.classList.toggle("warn", !online);
+  els.net.title = online ? "Conectado" : "Sin conexión";
 }
 window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
@@ -159,6 +163,7 @@ if ("serviceWorker" in navigator && !isLocalhost) {
       navigator.serviceWorker.addEventListener("message", (event) => {
         if (event.data === "SW_UPDATED") {
           els.badge.classList.remove("hidden");
+          els.badge.classList.add("warn");
         }
       });
     } catch(e) {
@@ -359,7 +364,8 @@ els.check.addEventListener("click", async () => {
   if (!v) return alert("Sin conexión o no se pudo comprobar.");
   const current = kb.version || "0.0.0";
   if (v.version && v.version !== current) {
-    els.badge.classList.remove("hidden");
+  els.badge.classList.remove("hidden");
+  els.badge.classList.add("warn");
     alert(`Hay nueva versión de contenido (${v.version}). Se actualizará al recargar.`);
   } else {
     alert("Ya tienes la última versión de contenido.");
