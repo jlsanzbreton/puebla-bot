@@ -279,6 +279,8 @@ button.outline {
   font-weight: 700;
   letter-spacing: 0.2px;
 }
+.badge.ok { background: #02310f; color: #9af4b9; border-color: #0a5a26; }
+.badge.warn { background: #3b2b00; color: var(--warn); border-color: #5b4510; }
 
 /* Chat */
 .chat {

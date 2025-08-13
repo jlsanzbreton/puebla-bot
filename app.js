@@ -11,21 +11,67 @@ try {
 } catch {}
 
 async function processSupabaseRedirect() {
-  const h = location.hash || "";
-  // Supabase magic-link places tokens in the hash (e.g. #access_token=...)
-  if (!/#.*(access_token|refresh_token|type=)/i.test(h)) return;
+  console.debug("[auth] processSupabaseRedirect at", location.href);
+  const hash = location.hash || "";
+  const search = location.search || "";
+  const hasCodeInSearch = /[?&]code=/.test(search);
+  const hasCodeInHash = /\?code=/.test(hash);
+  const hasTokens = /(access_token|refresh_token|token_hash|type=)/i.test(hash + search);
+
+  if (!hasCodeInSearch && !hasCodeInHash && !hasTokens) return;
+
   try {
-    // Ensure session is initialized (constructor processes the hash)
-    if (supaMod?.supa) await supaMod.supa.auth.getSession();
+    if (!supaMod?.supa) return;
+    if (hasCodeInSearch) {
+      // OAuth/OTP con ?code= en la URL normal
+      console.debug("[auth] exchanging code from search");
+      const { data, error } = await supaMod.supa.auth.exchangeCodeForSession(location.href);
+      if (error) console.error("[auth] exchange error", error);
+      else console.debug("[auth] exchange ok", !!data.session);
+    } else if (hasCodeInHash) {
+      // Algunos proveedores envían ?code= dentro del hash del router (#/fiestas?code=...)
+      const q = hash.includes("?") ? hash.slice(hash.indexOf("?") + 1) : "";
+      if (q) {
+        const url = location.origin + location.pathname + "?" + q;
+        console.debug("[auth] exchanging code from hash", url);
+        const { data, error } = await supaMod.supa.auth.exchangeCodeForSession(url);
+        if (error) console.error("[auth] exchange error", error);
+        else console.debug("[auth] exchange ok", !!data.session);
+      }
+    } else {
+      // Fragmento con access_token/refresh_token (implícito)
+  // Ejemplos:
+  //  - #access_token=...&refresh_token=...
+  //  - #/fiestas#access_token=...&refresh_token=...
+  // Tomamos la última porción tras el último '#'
+  const lastFrag = (location.href.split('#').pop() || "");
+  const ps = new URLSearchParams(lastFrag);
+  const at = ps.get("access_token");
+  const rt = ps.get("refresh_token");
+      if (at && rt) {
+        console.debug("[auth] setSession from hash tokens");
+        const { data, error } = await supaMod.supa.auth.setSession({ access_token: at, refresh_token: rt });
+        if (error) console.error("[auth] setSession error", error);
+        else console.debug("[auth] setSession ok", !!data.session);
+      } else {
+        console.debug("[auth] getSession after token-like hash");
+        const { data, error } = await supaMod.supa.auth.getSession();
+        if (error) console.error("[auth] getSession error", error);
+        else console.debug("[auth] getSession ok", !!data.session);
+      }
+    }
   } catch {}
-  // Clean URL and route to fiestas
+
+  // Limpia URL y navega a Fiestas
   const target = location.origin + location.pathname + "#/fiestas";
   history.replaceState({}, "", target);
+  console.debug("[auth] URL cleaned to", target);
 }
 await processSupabaseRedirect();
 
 const els = {
   net: document.getElementById("net-status"),
+  auth: document.getElementById("auth-status"),
   cver: document.getElementById("content-version"),
   check: document.getElementById("check-updates"),
   badge: document.getElementById("update-available"),
@@ -61,6 +107,47 @@ function updateOnlineStatus() {
 window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 updateOnlineStatus();
+
+// --- Auth status badge + react to auth changes
+async function updateAuthStatusBadge() {
+  if (!els.auth) return;
+  try {
+    const authMod = await import("/src/core/auth.ts");
+    const ses = await authMod.getSessionInfo();
+    if (ses.userId) {
+      const role = ses.role === "admin" ? " (admin)" : "";
+  els.auth.textContent = ses.displayName ? `Conectado: ${ses.displayName}${role}` : `Sesión iniciada${role}`;
+  els.auth.classList.remove("warn");
+  els.auth.classList.add("ok");
+    } else {
+      els.auth.textContent = "Invitado";
+  els.auth.classList.remove("ok");
+  els.auth.classList.add("warn");
+    }
+  } catch {
+    // keep badge as-is on transient errors
+  }
+}
+await updateAuthStatusBadge();
+
+(async () => {
+  try {
+    const authMod = await import("/src/core/auth.ts");
+    authMod.onAuthChange(async () => {
+      await updateAuthStatusBadge();
+      if (location.hash === "#/fiestas") {
+        // Re-mount fiestas to swap login ↔ contenido
+        if (els.fiestasRoot) {
+          delete els.fiestasRoot.dataset.mounted;
+          els.fiestasRoot.innerHTML = "";
+        }
+        await showFiestas();
+      }
+    });
+  } catch {
+    // ignore if auth module not available
+  }
+})();
 
 // --- Service worker registration (skip on localhost/dev)
 const isLocalhost = /^(localhost|127\.0\.0\.1)$/i.test(location.hostname);
