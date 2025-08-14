@@ -61,6 +61,7 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
 
   // Obtener número del día y mes para mostrar (extraído del label "jueves · 21 Agosto" o similar)
   const { number: dayNumber, monthAbbr } = getDayNumberAndMonth(day);
+  const weekdayLabel = getWeekdayLabel(day, activities);
   
   return (
     <div className="mb-8 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
@@ -72,7 +73,7 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
     <div className="text-sm opacity-90">{monthAbbr}</div>
           </div>
           <div>
-            <h2 className="text-2xl font-bold capitalize">{day}</h2>
+            <h2 className="text-2xl font-bold capitalize">{weekdayLabel}</h2>
             <div className="text-sm opacity-90">
               {activities.length} actividad{activities.length !== 1 ? 'es' : ''}
             </div>
@@ -156,4 +157,12 @@ function getDayNumberAndMonth(label: string): { number: string; monthAbbr: strin
     "septiembre": "SEP", "octubre": "OCT", "noviembre": "NOV", "diciembre": "DIC"
   };
   return { number: num, monthAbbr: abbrMap[mon] || mon.slice(0,3).toUpperCase() || "" };
+}
+
+function getWeekdayLabel(label: string, activities: Activity[]): string {
+  const parts = label.split("·").map(s => s.trim());
+  if (parts.length >= 2) return parts[0] || label;
+  // Fallback: tomar relativeDay de la primera actividad si existe
+  const rel = activities[0]?.relativeDay;
+  return (rel || label);
 }
