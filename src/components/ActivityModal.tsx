@@ -1,36 +1,162 @@
-import { Activity } from '../types';
+import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { Activity } from "../types";
 
 interface ActivityModalProps {
-  activity: Activity;
+  activity: Activity | null;
   onClose: () => void;
+  onJoin?: (activity: Activity) => void;
+  onLeave?: (activity: Activity) => void;
+  onExportICS?: (activity: Activity) => void;
+  isJoined?: boolean;
+  isProcessing?: boolean;
 }
 
-export function ActivityModal({ activity, onClose }: ActivityModalProps) {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h3 className="font-bold text-xl mb-2">{activity.title}</h3>
-        <p className="mb-4">{activity.description || 'Sin descripción disponible'}</p>
-        <div className="text-sm text-gray-600 mb-4">
-          <p><strong>Hora:</strong> {activity.time}</p>
-          {activity.location && <p><strong>Lugar:</strong> {activity.location}</p>}
-          {activity.priceEUR && <p><strong>Precio:</strong> {activity.priceEUR}€</p>}
+export function ActivityModal({
+  activity,
+  onClose,
+  onJoin,
+  onLeave,
+  onExportICS,
+  isJoined = false,
+  isProcessing = false,
+}: ActivityModalProps) {
+  const firstBtnRef = useRef<HTMLButtonElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
+  const open = !!activity;
+
+  // Bloquea scroll y permite cierre con ESC
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, onClose]);
+
+  // Foco inicial en botón principal
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => firstBtnRef.current?.focus(), 0);
+    }
+  }, [open]);
+
+  if (!open || !activity) return null;
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === overlayRef.current) onClose();
+  };
+
+  const modalContent = (
+    <div
+      ref={overlayRef}
+      onMouseDown={handleOverlayClick}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="activity-modal-title"
+    >
+      <div
+        className="relative z-[110] mx-4 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/10 
+                   dark:bg-neutral-900 dark:ring-white/10 max-h-[85vh] overflow-y-auto"
+      >
+        {/* Botón cerrar */}
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="absolute right-3 top-3 rounded-full p-2 text-neutral-500 hover:bg-neutral-100 
+                     hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        >
+          ×
+        </button>
+
+        {/* Título */}
+        <h2
+          id="activity-modal-title"
+          className="mb-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100"
+        >
+          {activity.title}
+        </h2>
+
+        {/* Información */}
+        <div className="space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
+          {activity.description && (
+            <p className="mb-2 leading-relaxed">{activity.description}</p>
+          )}
+          {activity.time && (
+            <p>
+              <strong>Hora:</strong> {activity.time}
+            </p>
+          )}
+          {activity.location && (
+            <p>
+              <strong>Lugar:</strong> {activity.location}
+            </p>
+          )}
+          {activity.host && (
+            <p>
+              <strong>Responsable:</strong> {activity.host}
+            </p>
+          )}
+          {activity.priceEUR && (
+            <p>
+              <strong>Precio:</strong> {activity.priceEUR}€
+            </p>
+          )}
+          {activity.notes && (
+            <p className="pt-1 text-xs text-neutral-600 dark:text-neutral-400">
+              {activity.notes}
+            </p>
+          )}
         </div>
-        <div className="flex gap-2">
-          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-            Apuntarme
-          </button>
-          <button className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-            Borrarme
-          </button>
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+
+        {/* Botones */}
+        <div className="mt-6 flex flex-wrap justify-end gap-3">
+          {!isJoined ? (
+            <button
+              ref={firstBtnRef}
+              onClick={() => onJoin?.(activity)}
+              disabled={isProcessing}
+              className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 
+                         disabled:opacity-60"
+            >
+              {isProcessing ? "Guardando…" : "Apuntarme"}
+            </button>
+          ) : (
+            <button
+              ref={firstBtnRef}
+              onClick={() => onLeave?.(activity)}
+              disabled={isProcessing}
+              className="px-4 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 
+                         dark:bg-emerald-900/30 dark:text-emerald-300 disabled:opacity-60"
+            >
+              {isProcessing ? "Quitando…" : "Borrarme"}
+            </button>
+          )}
+          <button
+            onClick={() => onExportICS?.(activity)}
+            className="px-4 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700"
+          >
             .ICS
           </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-neutral-200 text-neutral-800 hover:bg-neutral-300 
+                       dark:bg-neutral-800 dark:text-neutral-200"
+          >
+            Cerrar
+          </button>
         </div>
-        <button className="mt-4 text-sm text-gray-600 underline" onClick={onClose}>
-          Cerrar
-        </button>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
