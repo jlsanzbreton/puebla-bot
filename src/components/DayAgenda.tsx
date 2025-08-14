@@ -8,16 +8,18 @@ interface DayAgendaProps {
 }
 
 export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
-  // Separar actividades por hora para mañana/tarde
-  const morningActivities = activities.filter(a => {
+  // Separar actividades por sesión (con fallback por hora si faltara)
+  const toSession = (a: Activity): "mañana" | "tarde" | "noche" => {
+    if (a.session) return a.session;
     const hour = parseInt(a.time.split(':')[0]);
-    return hour < 14; // Antes de las 14:00 es mañana
-  });
-  
-  const afternoonActivities = activities.filter(a => {
-    const hour = parseInt(a.time.split(':')[0]);
-    return hour >= 14; // 14:00 o después es tarde
-  });
+    if (hour < 14 && hour >= 5) return "mañana";
+    if (hour >= 14 && hour < 20) return "tarde";
+    return "noche";
+  };
+
+  const morningActivities = activities.filter(a => toSession(a) === "mañana");
+  const afternoonActivities = activities.filter(a => toSession(a) === "tarde");
+  const nightActivities = activities.filter(a => toSession(a) === "noche");
 
   // Agrupar actividades por hora
   const groupByTime = (activities: Activity[]) => {
@@ -34,6 +36,7 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
 
   const morningByTime = groupByTime(morningActivities);
   const afternoonByTime = groupByTime(afternoonActivities);
+  const nightByTime = groupByTime(nightActivities);
 
   // Componente para renderizar un grupo de actividades por hora
   const TimeGroup = ({ time, activities }: { time: string; activities: Activity[] }) => {
@@ -56,17 +59,17 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
     );
   };
 
-  // Obtener número del día para mostrar
-  const dayNumber = getDayNumber(day);
+  // Obtener número del día y mes para mostrar (extraído del label "jueves · 21 Agosto" o similar)
+  const { number: dayNumber, monthAbbr } = getDayNumberAndMonth(day);
   
   return (
     <div className="mb-8 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
       {/* Header del día */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
         <div className="flex items-center gap-4">
           <div className="text-center">
             <div className="text-3xl font-bold">{dayNumber}</div>
-            <div className="text-sm opacity-90">AGO</div>
+    <div className="text-sm opacity-90">{monthAbbr}</div>
           </div>
           <div>
             <h2 className="text-2xl font-bold capitalize">{day}</h2>
@@ -111,6 +114,22 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
               </div>
             </div>
           )}
+
+          {/* Noche */}
+          {Object.keys(nightByTime).length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                🌃 Noche
+              </h3>
+              <div className="space-y-4">
+                {Object.entries(nightByTime)
+                  .sort(([timeA], [timeB]) => timeA.localeCompare(timeB))
+                  .map(([time, timeActivities]) => (
+                    <TimeGroup key={time} time={time} activities={timeActivities} />
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Si no hay actividades */}
@@ -124,13 +143,17 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
   );
 }
 
-// Helper para obtener el número del día
-function getDayNumber(day: string): string {
-  const dayMap: Record<string, string> = {
-    'jueves': '15',
-    'viernes': '16', 
-    'sábado': '17',
-    'domingo': '18'
+// Helper para obtener número y mes desde una etiqueta "<relDay> · <DD Mes>"
+function getDayNumberAndMonth(label: string): { number: string; monthAbbr: string } {
+  const parts = label.split("·").map(s => s.trim());
+  const monthDay = parts[1] || parts[0] || ""; // puede venir sólo el monthDay
+  const m = monthDay.match(/(\d{1,2})\s+(\p{L}+)/u);
+  const num = m?.[1] || "?";
+  const mon = (m?.[2] || "").toLowerCase();
+  const abbrMap: Record<string, string> = {
+    "enero": "ENE", "febrero": "FEB", "marzo": "MAR", "abril": "ABR",
+    "mayo": "MAY", "junio": "JUN", "julio": "JUL", "agosto": "AGO",
+    "septiembre": "SEP", "octubre": "OCT", "noviembre": "NOV", "diciembre": "DIC"
   };
-  return dayMap[day.toLowerCase()] || '?';
+  return { number: num, monthAbbr: abbrMap[mon] || mon.slice(0,3).toUpperCase() || "" };
 }
