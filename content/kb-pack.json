@@ -29,18 +29,23 @@
       "shortName": "Paseo"
     },
     {
+      "eventId": "jue-1200-charla-sobre-Inteligencia-Artificial",
+      "desc": "Charla sobre IA.",
+      "shortName": "Charla IA"
+    },
+    {
       "eventId": "jue-2000-pregon-de-fiestas",
       "desc": "Apertura oficial de fiestas. Pendiente confirmar con Gaspar.",
       "shortName": "Pregón"
     },
     {
       "eventId": "jue-2030-ecapincho",
-      "desc": "Pincho de Eca (término inventado).",
+      "desc": "Pincho de Eca el pincho que todos estaban esperando.",
       "shortName": "Ecapincho"
     },
     {
       "eventId": "jue-2230-cine-a-la-fresca",
-      "desc": "Proyección al aire libre (título por confirmar).",
+      "desc": "Proyección al aire libre del peliculón del verano (título por confirmar).",
       "shortName": "Cine"
     },
     {

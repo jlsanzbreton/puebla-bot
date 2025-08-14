@@ -1,3 +1,4 @@
+// src/components/ActivityModal.tsx
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Activity } from "../types";
@@ -26,26 +27,20 @@ export function ActivityModal({
 
   const open = !!activity;
 
-  // Bloquea scroll y permite cierre con ESC
   useEffect(() => {
     if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    const prevOverflow = document.body.style.overflow;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
     };
   }, [open, onClose]);
 
-  // Foco inicial en botón principal
   useEffect(() => {
-    if (open) {
-      setTimeout(() => firstBtnRef.current?.focus(), 0);
-    }
+    if (open) setTimeout(() => firstBtnRef.current?.focus(), 0);
   }, [open]);
 
   if (!open || !activity) return null;
@@ -67,7 +62,6 @@ export function ActivityModal({
         className="relative z-[110] mx-4 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/10 
                    dark:bg-neutral-900 dark:ring-white/10 max-h-[85vh] overflow-y-auto"
       >
-        {/* Botón cerrar */}
         <button
           onClick={onClose}
           aria-label="Cerrar"
@@ -77,7 +71,6 @@ export function ActivityModal({
           ×
         </button>
 
-        {/* Título */}
         <h2
           id="activity-modal-title"
           className="mb-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100"
@@ -85,7 +78,6 @@ export function ActivityModal({
           {activity.title}
         </h2>
 
-        {/* Información */}
         <div className="space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
           {activity.description && (
             <p className="mb-2 leading-relaxed">{activity.description}</p>
@@ -100,14 +92,14 @@ export function ActivityModal({
               <strong>Lugar:</strong> {activity.location}
             </p>
           )}
-          {activity.host && (
+          {"host" in activity && activity.host && (
             <p>
               <strong>Responsable:</strong> {activity.host}
             </p>
           )}
-          {activity.priceEUR && (
+          {"priceEUR" in activity && activity.priceEUR && (
             <p>
-              <strong>Precio:</strong> {activity.priceEUR}€
+              <strong>Precio:</strong> {activity.priceEUR}
             </p>
           )}
           {activity.notes && (
@@ -117,15 +109,13 @@ export function ActivityModal({
           )}
         </div>
 
-        {/* Botones */}
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           {!isJoined ? (
             <button
               ref={firstBtnRef}
               onClick={() => onJoin?.(activity)}
               disabled={isProcessing}
-              className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 
-                         disabled:opacity-60"
+              className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               {isProcessing ? "Guardando…" : "Apuntarme"}
             </button>
