@@ -33,8 +33,10 @@ export function AgendaView() {
         const ordSession = { "mañana": 0, "tarde": 1, "noche": 2 } as Record<string, number>;
         const timeKey = (it: Activity) => {
           const t = it.time || "00:00";
-          if ((it.session || "noche") === "noche" && /^00:\d{2}$/.test(t)) {
-            return `24:${t.split(":")[1]}`;
+          if ((it.session || "noche") === "noche" && /^0[0-4]:\d{2}$/.test(t)) {
+            const [hh, mm] = t.split(":");
+            const h = parseInt(hh, 10) + 24;
+            return `${h.toString().padStart(2, "0")}:${mm}`;
           }
           return t;
         };

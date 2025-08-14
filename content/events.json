@@ -45,7 +45,7 @@
     "time": "20:30",
     "session": "noche",
     "title": "Ecapincho",
-    "priceEUR": 1,
+    "priceEUR": 5,
     "category": "gastronomía",
     "location": "Bar-Plaza",
     "notifyMinutesBefore": 15
@@ -98,7 +98,7 @@
     "notes": "Trofeo a cargo de Isabel",
     "category": "torneo",
     "location": "Bar",
-    "priceEUR": 0,
+    "priceEUR": 5,
     "notifyMinutesBefore": 30
   },
   {
@@ -110,6 +110,7 @@
     "title": "Campeonato de rabino",
     "category": "torneo",
     "location": "Bar",
+    "priceEUR": 5,
     "notifyMinutesBefore": 30
   },
   {
@@ -121,12 +122,14 @@
     "title": "Gincana",
     "category": "infantil-familiar",
     "location": "Todo el pueblo",
+    "priceEUR":0,
     "notifyMinutesBefore": 30
   },
   {
     "id": "vie-2000-orquesta-primera-sesion",
     "relativeDay": "viernes",
     "time": "20:00",
+    "monthDay": "22 Agosto",
     "session": "tarde",
     "title": "Orquesta – primera sesión",
     "endTime": "21:30",
@@ -157,6 +160,17 @@
     "notes": "Bingo en el descanso",
     "category": "música",
     "notifyMinutesBefore": 30
+  },
+  {
+    "id": "vie-0130-Bingo",
+    "relativeDay": "viernes",
+    "monthDay": "22 Agosto",
+    "time": "01:30",
+    "session": "noche",
+    "title": "Bingo",
+    "category": "juego",
+    "location": "Plaza",
+    "notifyMinutesBefore": 15
   },
   {
     "id": "sab-1200-misa-con-musica",
@@ -198,6 +212,7 @@
     "title": "Campeonato de guiñote",
     "category": "torneo",
     "location": "Bar",
+    "priceEUR": 5,
     "notifyMinutesBefore": 30
   },
   {
@@ -209,6 +224,7 @@
     "title": "Campeonato de futbolín",
     "category": "torneo",
     "location": "Granero",
+    "priceEUR": 5,
     "notifyMinutesBefore": 30
   },
   {
@@ -219,6 +235,7 @@
     "title": "Campeonato de ping pong",
     "category": "torneo",
     "location": "Granero",
+    "priceEUR": 5,
     "notifyMinutesBefore": 30
   },
   {

@@ -76,7 +76,7 @@
     {
       "eventId": "vie-2000-orquesta-primera-sesion",
       "desc": "Horario orientativo; puede variar.",
-      "shortName": "Orquesta"
+      "shortName": "Orquesta 1ª Sesión"
     },
     {
       "eventId": "vie-2130-cena-en-la-plaza-carrilleras",
@@ -85,8 +85,13 @@
     },
     {
       "eventId": "vie-0030-orquesta-segunda-sesion",
+      "desc": "Sesión nocturna para los más cafeteros.",
+      "shortName": "Orquesta 2ª Sesión"
+    },
+    {
+      "eventId": "vie-0130-Bingo",
       "desc": "Bingo durante el descanso.",
-      "shortName": "Orquesta y Bingo"
+      "shortName": "Bingo"
     },
     {
       "eventId": "sab-1200-misa-con-musica",

@@ -38,7 +38,13 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
   const afternoonByTime = groupByTime(afternoonActivities);
   const nightByTime = groupByTime(nightActivities);
   const sortTime = (a: string, b: string) => {
-    const adj = (t: string) => /^00:\d{2}$/.test(t) ? `24:${t.split(":")[1]}` : t;
+    const adj = (t: string) => {
+      if (/^0[0-4]:\d{2}$/.test(t)) {
+        const [h, m] = t.split(":");
+        return `${parseInt(h, 10) + 24}:${m}`;
+      }
+      return t;
+    };
     return adj(a).localeCompare(adj(b));
   };
 
