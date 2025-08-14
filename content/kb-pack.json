@@ -170,8 +170,13 @@
     },
     {
       "eventId": "dom-2200-entrega-de-trofeos-y-bingo",
-      "desc": "",
-      "shortName": "Entrega de Trofeos y Bingo"
+      "desc": "Se entregarán los trofeos de los campeonatos y se hará el último bingo después",
+      "shortName": "Trofeos"
+    },
+    {
+      "eventId": "dom-2230-último-bingo",
+      "desc": "Compra tus tarjetas de bingo",
+      "shortName": "Último Bingo"
     }
   ],
   "articles": [

@@ -158,6 +158,7 @@
     "title": "Orquesta – segunda sesión",
     "endTime": "04:00",
     "notes": "Bingo en el descanso",
+    "location": "Plaza",
     "category": "música",
     "notifyMinutesBefore": 30
   },
@@ -342,15 +343,27 @@
     "notifyMinutesBefore": 30
   },
   {
-    "id": "dom-2200-entrega-de-trofeos-y-bingo",
+    "id": "dom-2200-entrega-de-trofeos",
     "relativeDay": "domingo",
     "monthDay": "24 Agosto",
     "time": "22:00",
     "session": "noche",
-    "title": "Entrega de trofeos y bingo",
-    "notes": "Trae tus tarjetas de bingo",
+    "title": "Trofeos",
+    "notes": "¡Qué emoción! ¿Me darán un premio?",
     "location": "Plaza",
     "category": "acto",
+    "notifyMinutesBefore": 30
+  },
+  {
+    "id": "dom-2230-último-bingo",
+    "relativeDay": "domingo",
+    "monthDay": "24 Agosto",
+    "time": "22:30",
+    "session": "noche",
+    "title": "Último bingo",
+    "notes": "Compra tus tarjetas de bingo",
+    "location": "Plaza",
+    "category": "juego",
     "notifyMinutesBefore": 30
   }
 ]
