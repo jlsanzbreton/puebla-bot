@@ -27,7 +27,8 @@ export function useActivities(): Activity[] {
     const session = (ev as any).session as "mañana" | "tarde" | "noche" | undefined;
     const normalized: Activity = {
       ...ev,
-      monthDay: ev.monthDay || monthFallback[(ev.relativeDay || "").toLowerCase()] || ev.monthDay,
+      relativeDay: (ev.relativeDay || "").trim(),
+      monthDay: (ev.monthDay || monthFallback[(ev.relativeDay || "").toLowerCase()] || ev.monthDay || "").toString().replace(/\s+/g, " ").trim(),
       session: session || inferSession(ev.time),
       shortName: extra?.shortName || ev.title.split(' ')[0],
       description: extra?.desc || "",

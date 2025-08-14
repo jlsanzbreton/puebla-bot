@@ -10,9 +10,9 @@ export function AgendaView() {
   // Agrupar por day real (monthDay + relativeDay como key legible)
   const groups = new Map<string, Activity[]>();
   for (const a of acts) {
-    const md = a.monthDay || "?";
-    const rel = a.relativeDay || "";
-    const key = `${md}__${rel}`; // clave técnica
+    const md = (a.monthDay || "?").trim();
+    const rel = (a.relativeDay || "").trim();
+    const key = `${md}__${rel}`.replace(/\s+/g, " "); // clave técnica normalizada
     const arr = groups.get(key) || [];
     arr.push(a);
     groups.set(key, arr);
@@ -29,9 +29,16 @@ export function AgendaView() {
       {dayKeys.map(key => {
         const [monthDay, rel] = key.split("__");
         const items = groups.get(key) || [];
-        // Ordenar por session y hora
+        // Ordenar por session y hora; 00:xx en 'noche' se considera 24:xx para ir al final
         const ordSession = { "mañana": 0, "tarde": 1, "noche": 2 } as Record<string, number>;
-        items.sort((a,b) => (ordSession[a.session || "mañana"] - ordSession[b.session || "mañana"]) || a.time.localeCompare(b.time));
+        const timeKey = (it: Activity) => {
+          const t = it.time || "00:00";
+          if ((it.session || "noche") === "noche" && /^00:\d{2}$/.test(t)) {
+            return `24:${t.split(":")[1]}`;
+          }
+          return t;
+        };
+        items.sort((a,b) => (ordSession[a.session || "mañana"] - ordSession[b.session || "mañana"]) || timeKey(a).localeCompare(timeKey(b)));
         const label = rel ? `${rel} · ${monthDay}` : monthDay;
         return (
           <DayAgenda

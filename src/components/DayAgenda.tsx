@@ -37,6 +37,10 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
   const morningByTime = groupByTime(morningActivities);
   const afternoonByTime = groupByTime(afternoonActivities);
   const nightByTime = groupByTime(nightActivities);
+  const sortTime = (a: string, b: string) => {
+    const adj = (t: string) => /^00:\d{2}$/.test(t) ? `24:${t.split(":")[1]}` : t;
+    return adj(a).localeCompare(adj(b));
+  };
 
   // Componente para renderizar un grupo de actividades por hora
   const TimeGroup = ({ time, activities }: { time: string; activities: Activity[] }) => {
@@ -92,7 +96,7 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
               </h3>
               <div className="space-y-4">
                 {Object.entries(morningByTime)
-                  .sort(([timeA], [timeB]) => timeA.localeCompare(timeB))
+                  .sort(([timeA], [timeB]) => sortTime(timeA, timeB))
                   .map(([time, timeActivities]) => (
                     <TimeGroup key={time} time={time} activities={timeActivities} />
                   ))}
@@ -108,7 +112,7 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
               </h3>
               <div className="space-y-4">
                 {Object.entries(afternoonByTime)
-                  .sort(([timeA], [timeB]) => timeA.localeCompare(timeB))
+                  .sort(([timeA], [timeB]) => sortTime(timeA, timeB))
                   .map(([time, timeActivities]) => (
                     <TimeGroup key={time} time={time} activities={timeActivities} />
                   ))}
@@ -124,7 +128,7 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
               </h3>
               <div className="space-y-4">
                 {Object.entries(nightByTime)
-                  .sort(([timeA], [timeB]) => timeA.localeCompare(timeB))
+                  .sort(([timeA], [timeB]) => sortTime(timeA, timeB))
                   .map(([time, timeActivities]) => (
                     <TimeGroup key={time} time={time} activities={timeActivities} />
                   ))}
