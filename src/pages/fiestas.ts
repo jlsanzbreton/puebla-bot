@@ -2,6 +2,9 @@ import { db, Participant, Registration, nowIso } from "../db/fiestas.db";
 import { supa } from "../core/api/supabase";
 import { syncAll } from "../core/sync/sync";
 import { getSessionInfo, signInWithMagic, signOut } from "../core/auth";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { AgendaView } from "../components/AgendaView";
 
 type Role = "admin" | "user";
 type Session = { userId: string; role: Role; displayName: string };
@@ -127,55 +130,24 @@ function layoutHTML(session: Session) {
   </div>`;
 }
 
-async function renderAgenda(events: EventCore[], session: Session) {
+async function renderAgenda(_events: EventCore[], _session: Session) {
   const el = document.getElementById("agenda-list")!;
-  el.innerHTML = events.map(ev => cardEvent(ev)).join("");
-
-  el.querySelectorAll<HTMLButtonElement>("[data-reg]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const eventId = btn.dataset.reg!;
-      const participant = await pickParticipant(session);
-      if (!participant) return;
-      await createRegistrationLocal(eventId, participant, session);
-      await syncAll();
-      await renderMyRegs(session);
-      alert("Apuntado ✅");
-    });
-  });
-
-  el.querySelectorAll<HTMLAnchorElement>("[data-ics]").forEach(a => {
-    a.addEventListener("click", e => {
-      e.preventDefault();
-      const id = (e.currentTarget as HTMLAnchorElement).dataset.ics!;
-      const ev = events.find(x => x.id === id)!;
-      downloadICS(ev);
-    });
-  });
-}
-
-function cardEvent(ev: EventCore) {
-  const when = ev.startsAt
-    ? new Date(ev.startsAt).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })
-    : `${ev.relativeDay ?? ""} ${ev.time ?? ""}`.trim();
-  const price = ev.priceEUR ? ` · ${ev.priceEUR.toFixed(2)} €` : "";
-  return `
-  <div class="tile">
-    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
-      <div>
-        <div style="font-weight:800">${ev.title}</div>
-        <div style="opacity:.8">${when}${price}${ev.location ? " · " + ev.location : ""}</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <a href="#" class="outline small" data-ics="${ev.id}">.ics</a>
-        <button class="primary small" data-reg="${ev.id}">Apuntarme</button>
-      </div>
-    </div>
-  </div>`;
+  
+  // Limpiar el contenido anterior
+  el.innerHTML = "";
+  
+  // Crear un contenedor para React
+  const reactContainer = document.createElement("div");
+  el.appendChild(reactContainer);
+  
+  // Renderizar el componente React
+  const root = createRoot(reactContainer);
+  root.render(React.createElement(AgendaView));
 }
 
 /* ---------- Mis inscripciones ---------- */
 async function renderMyRegs(session: Session) {
-  const el = document.getElementById("myregs")!;
+  const el = document.getElementById("myregs")!;;
   const regs = await db.registrations
     .where("created_by_user_id").equals(session.userId)
     .and(r => !r.deleted)
@@ -293,57 +265,6 @@ async function ensureSelfParticipant(session: Session) {
   return p;
 }
 
-async function pickParticipant(session: Session): Promise<Participant | null> {
-  const list = await db.participants.where("owner_user_id").equals(session.userId).and(p => !p.deleted).toArray();
-  const name = prompt(`¿A quién apuntas?\n${list.map(p => `- ${p.display_name}`).join("\n")}\n\nEscribe nombre para crear nuevo o deja vacío para “${session.displayName}”.`, "");
-  if (name === null) return null;
-  const trimmed = name.trim();
-  if (!trimmed) {
-    return (await db.participants.where({ owner_user_id: session.userId, display_name: session.displayName }).first())!;
-  }
-  const existing = list.find(p => p.display_name.toLowerCase() === trimmed.toLowerCase());
-  if (existing) return existing;
-
-  const p: Participant = {
-    id: crypto.randomUUID(),
-    owner_user_id: session.userId,
-    display_name: trimmed,
-    deleted: false,
-    created_at: nowIso(),
-    updated_at: nowIso()
-  };
-  await db.participants.add(p);
-  await db.outbox.add({ id: crypto.randomUUID(), table: "participants", op: "upsert", payload: p, created_at: nowIso() });
-  return p;
-}
-
-async function createRegistrationLocal(event_id: string, participant: Participant, session: Session) {
-  const dup = await db.registrations.where({ event_id, participant_id: participant.id }).first();
-  if (dup && !dup.deleted) return;
-
-  const reg: Registration = {
-    id: crypto.randomUUID(),
-    event_id,
-    participant_id: participant.id,
-    participant_name: participant.display_name,
-    created_by_user_id: session.userId,
-    payment_status: "pending",
-    payment_amount: undefined,
-    payment_method: undefined,
-    is_confirmed: true,
-    deleted: false,
-    created_at: nowIso(),
-    updated_at: nowIso()
-  };
-  await db.registrations.add(reg);
-  await db.outbox.add({
-    id: crypto.randomUUID(),
-    table: "registrations",
-    op: "rpc_register",
-    payload: { event_id, participant_id: participant.id, payment_amount: reg.payment_amount },
-    created_at: nowIso()
-  });
-}
 
 async function cancelRegistrationLocal(regId: string) {
   const row = await db.registrations.get(regId);
@@ -355,28 +276,6 @@ async function cancelRegistrationLocal(regId: string) {
 }
 
 /* ---------- Utils ---------- */
-function downloadICS(ev: EventCore) {
-  const dt = ev.startsAt ? new Date(ev.startsAt) : new Date();
-  const dtEnd = ev.endsAt ? new Date(ev.endsAt) : new Date(dt.getTime() + 60 * 60 * 1000);
-  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const ics =
-`BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//PueblaBot//Fiestas//ES
-BEGIN:VEVENT
-UID:${ev.id}@puebla-bot
-DTSTAMP:${fmt(new Date())}
-DTSTART:${fmt(dt)}
-DTEND:${fmt(dtEnd)}
-SUMMARY:${ev.title}
-LOCATION:${ev.location ?? ""}
-END:VEVENT
-END:VCALENDAR`;
-  const blob = new Blob([ics], { type: "text/calendar" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = `${ev.id}.ics`; a.click();
-}
-
 function exportCSV(regs: Registration[]) {
   const head = ["id","event_id","participant_name","payment_status","payment_amount","deleted","created_at","updated_at"];
   const rows = regs.map(r => [r.id, r.event_id, r.participant_name, r.payment_status, r.payment_amount ?? "", r.deleted, r.created_at, r.updated_at]);

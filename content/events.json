@@ -2,6 +2,7 @@
   {
     "id": "jue-0900-paseo-guiado-por-el-monte-de-moron",
     "relativeDay": "jueves",
+    "monthDay": "21 Agosto",
     "time": "09:00",
     "title": "Paseo guiado por el monte de Morón",
     "location": "Monte de Morón",
@@ -12,9 +13,11 @@
   {
     "id": "jue-2000-pregon-de-fiestas",
     "relativeDay": "jueves",
+    "monthDay": "21 Agosto",
     "time": "20:00",
     "title": "Pregón de fiestas",
     "notes": "Pendiente confirmar con Gaspar",
+    "host": "Gaspar",
     "category": "acto",
     "location": "Plaza",
     "notifyMinutesBefore": 30
@@ -22,6 +25,7 @@
   {
     "id": "jue-2030-ecapincho",
     "relativeDay": "jueves",
+    "monthDay": "21 Agosto",
     "time": "20:30",
     "title": "Ecapincho",
     "priceEUR": 1,
@@ -32,6 +36,7 @@
   {
     "id": "jue-2230-cine-a-la-fresca",
     "relativeDay": "jueves",
+    "monthDay": "21 Agosto",
     "time": "22:30",
     "title": "Cine a la fresca",
     "host": "Rafa",
@@ -42,6 +47,7 @@
   {
     "id": "vie-1000-sesion-de-yoga",
     "relativeDay": "viernes",
+    "monthDay": "22 Agosto",
     "time": "10:00",
     "title": "Sesión de yoga",
     "host": "Tere",
@@ -52,6 +58,7 @@
   {
     "id": "vie-1200-taller-de-pulseras",
     "relativeDay": "viernes",
+    "monthDay": "22 Agosto",
     "time": "12:00",
     "title": "Taller de pulseras",
     "host": "Tere y compañía",
@@ -62,6 +69,7 @@
   {
     "id": "vie-1800-campeonato-de-mus",
     "relativeDay": "viernes",
+    "monthDay": "22 Agosto",
     "time": "18:00",
     "title": "Campeonato de mus",
     "notes": "Trofeo a cargo de Isabel",
@@ -72,6 +80,7 @@
   {
     "id": "vie-1800-campeonato-de-rabino",
     "relativeDay": "viernes",
+    "monthDay":"22 Agosto",
     "time": "18:00",
     "title": "Campeonato de rabino",
     "category": "torneo",
@@ -81,6 +90,7 @@
   {
     "id": "vie-1830-gincana",
     "relativeDay": "viernes",
+    "monthDay": "22 Agosto",
     "time": "18:30",
     "title": "Gincana",
     "category": "infantil-familiar",
@@ -100,6 +110,7 @@
   {
     "id": "vie-2130-cena-en-la-plaza-carrilleras",
     "relativeDay": "viernes",
+    "monthDay":"22 Agosto",
     "time": "21:30",
     "title": "Cena en la plaza (carrilleras)",
     "priceEUR": 13,
@@ -110,6 +121,7 @@
   {
     "id": "vie-0030-orquesta-segunda-sesion",
     "relativeDay": "viernes",
+    "monthDay":"22 Agosto",
     "time": "00:30",
     "title": "Orquesta – segunda sesión",
     "endTime": "04:00",
@@ -120,6 +132,7 @@
   {
     "id": "sab-1200-misa-con-musica",
     "relativeDay": "sábado",
+    "monthDay": "23 Agosto",
     "time": "12:00",
     "title": "Misa con música",
     "category": "religioso",
@@ -129,6 +142,7 @@
   {
     "id": "sab-1245-subasta-de-trenzas",
     "relativeDay": "sábado",
+    "monthDay":"23 Agosto",
     "time": "12:45",
     "title": "Subasta de trenzas",
     "category": "tradición",
@@ -138,14 +152,17 @@
   {
     "id": "sab-1300-vermut-con-musica-y-gildas",
     "relativeDay": "sábado",
+    "monthDay":"23 Agosto",
     "time": "13:00",
     "title": "Vermut con música y gildas",
+    "location":"Bar-Plaza",
     "category": "gastronomía",
     "notifyMinutesBefore": 30
   },
   {
     "id": "sab-1730-campeonato-de-guinote",
     "relativeDay": "sábado",
+    "monthDay":"23 Agosto",
     "time": "17:30",
     "title": "Campeonato de guiñote",
     "category": "torneo",
@@ -155,6 +172,7 @@
   {
     "id": "sab-1730-campeonato-de-futbolin",
     "relativeDay": "sábado",
+    "monthDay":"23 Agosto",
     "time": "17:30",
     "title": "Campeonato de futbolín",
     "category": "torneo",
@@ -164,30 +182,37 @@
   {
     "id": "sab-1730-campeonato-de-ping-pong",
     "relativeDay": "sábado",
+    "monthDay": "23 Agosto",
     "time": "17:30",
     "title": "Campeonato de ping pong",
     "category": "torneo",
+    "location": "Granero",
     "notifyMinutesBefore": 30
   },
   {
     "id": "sab-1900-juegos-populares-en-la-plaza",
     "relativeDay": "sábado",
+    "monthDay": "23 Agosto",
     "time": "19:00",
-    "title": "Juegos populares en la plaza",
+    "title": "Juegos populares",
     "category": "infantil-familiar",
+    "location": "Plaza",
     "notifyMinutesBefore": 30
   },
   {
     "id": "sab-2000-mercadillo-de-artesania-y-merchandising",
     "relativeDay": "sábado",
+    "monthDay":"23 Agosto",
     "time": "20:00",
     "title": "Mercadillo de artesanía y merchandising Puebla de Eca",
     "category": "mercadillo",
+    "location": "Plaza",
     "notifyMinutesBefore": 30
   },
   {
     "id": "sab-2030-dj-primera-sesion",
     "relativeDay": " sábado",
+    "monthDay":"23 Agosto",
     "time": "20:30",
     "title": "DJ – primera sesión",
     "endTime": "22:00",
@@ -198,6 +223,7 @@
   {
     "id": "sab-2200-racion-de-migas",
     "relativeDay": "sábado",
+    "monthDay": "23 Agosto",
     "time": "22:00",
     "title": "Ración de migas",
     "priceEUR": 5,
@@ -208,14 +234,17 @@
   {
     "id": "sab-2330-bingo",
     "relativeDay": "sábado",
+    "monthDay": "23 Agosto",
     "time": "23:30",
     "title": "Bingo",
     "category": "juego",
+    "location": "Plaza",
     "notifyMinutesBefore": 15
   },
   {
     "id": "sab-0000-dj-segunda-sesion",
     "relativeDay": "sábado",
+    "monthDay":"23 Agosto",
     "time": "00:00",
     "title": "DJ – segunda sesión",
     "endTime": "04:00",
@@ -226,8 +255,9 @@
   {
     "id": "dom-1400-comida-en-el-rio-paella",
     "relativeDay": "domingo",
+    "monthDay": "24 Agosto",
     "time": "14:00",
-    "title": "Comida en el río (paella)",
+    "title": "Comida popular (paella)",
     "priceEUR": 13,
     "category": "gastronomía",
     "location": "Río",
@@ -236,6 +266,7 @@
   {
     "id": "dom-1630-campeonato-de-bolos-musica-y-copeo",
     "relativeDay": "domingo",
+    "monthDay": "24 Agosto",
     "time": "16:30",
     "title": "Campeonato de bolos, música y copeo",
     "category": "torneo",
@@ -245,6 +276,7 @@
   {
     "id": "dom-2100-tortillas-y-postres",
     "relativeDay": "domingo",
+    "monthDay": "24 Agosto",
     "time": "21:00",
     "title": "Tortillas y postres",
     "notes": "Trae tu tortilla o postre para compartir",
@@ -255,6 +287,7 @@
   {
     "id": "dom-2200-entrega-de-trofeos-y-bingo",
     "relativeDay": "domingo",
+    "monthDay": "24 Agosto",
     "time": "22:00",
     "title": "Entrega de trofeos y bingo",
     "notes": "Trae tus tarjetas de bingo",

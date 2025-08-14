@@ -11,6 +11,7 @@ try {
 } catch {}
 
 async function processSupabaseRedirect() {
+  console.log("Entering processSupabaseRedirect");
   console.debug("[auth] processSupabaseRedirect at", location.href);
   const hash = location.hash || "";
   const search = location.search || "";
@@ -66,7 +67,9 @@ async function processSupabaseRedirect() {
   const target = location.origin + location.pathname + "#/fiestas";
   history.replaceState({}, "", target);
   console.debug("[auth] URL cleaned to", target);
+  console.log("Exiting processSupabaseRedirect");
 }
+// End of processSupabaseRedirect function
 await processSupabaseRedirect();
 
 const els = {
@@ -114,23 +117,25 @@ updateOnlineStatus();
 
 // --- Auth status badge + react to auth changes
 async function updateAuthStatusBadge() {
+  console.log("Entering updateAuthStatusBadge");
   if (!els.auth) return;
   try {
     const authMod = await import("/src/core/auth.ts");
     const ses = await authMod.getSessionInfo();
     if (ses.userId) {
       const role = ses.role === "admin" ? " (admin)" : "";
-  els.auth.textContent = ses.displayName ? `Conectado: ${ses.displayName}${role}` : `Sesión iniciada${role}`;
-  els.auth.classList.remove("warn");
-  els.auth.classList.add("ok");
+      els.auth.textContent = ses.displayName ? `Conectado: ${ses.displayName}${role}` : `Sesión iniciada${role}`;
+      els.auth.classList.remove("warn");
+      els.auth.classList.add("ok");
     } else {
       els.auth.textContent = "Invitado";
-  els.auth.classList.remove("ok");
-  els.auth.classList.add("warn");
+      els.auth.classList.remove("ok");
+      els.auth.classList.add("warn");
     }
   } catch {
     // keep badge as-is on transient errors
   }
+  console.log("Exiting updateAuthStatusBadge");
 }
 await updateAuthStatusBadge();
 
@@ -203,16 +208,18 @@ if (isIOS() && !isInStandaloneMode()) {
 
 // --- Load KB from cache/network
 async function loadKB() {
+  console.log("Entering loadKB");
   try {
     const resp = await fetch(KB_URL, { cache: "no-cache" });
     if (!resp.ok) throw new Error("KB fetch failed");
     kb = await resp.json();
     els.cver.textContent = kb.version || "—";
     renderKBSummary();
-  } catch {
+  } catch (err) {
+    console.error("Error in loadKB fetch:", err);
     // Use cached version via service worker (fetch will fail offline but SW may have cached response)
-  const cached = (typeof caches !== "undefined" && caches.match) ? await caches.match(KB_URL) : null;
-  if (cached) {
+    const cached = (typeof caches !== "undefined" && caches.match) ? await caches.match(KB_URL) : null;
+    if (cached) {
       kb = await cached.json();
       els.cver.textContent = kb.version || "—";
       renderKBSummary();
@@ -220,6 +227,7 @@ async function loadKB() {
       els.kb.innerHTML = "<div class='item'>Sin contenido local todavía.</div>";
     }
   }
+  console.log("Exiting loadKB");
 }
 function renderKBSummary() {
   const items = [];
@@ -290,6 +298,7 @@ els.modePueblo.addEventListener("click", () => setMode("pueblo"));
 
 // Router for fiestas
 async function showFiestas() {
+  console.log("Entering showFiestas");
   els.sectionWorkshop.classList.add("hidden");
   els.sectionPueblo.classList.add("hidden");
   els.sectionFiestas.classList.remove("hidden");
@@ -298,11 +307,15 @@ async function showFiestas() {
   els.modeFiesta && els.modeFiesta.classList.add("active");
   if (els.fiestasRoot && !els.fiestasRoot.dataset.mounted) {
     try {
-  const mod = await import("/src/pages/fiestas.ts");
+      const mod = await import("/src/pages/fiestas.ts");
       await mod.mountFiestasPage(els.fiestasRoot);
       els.fiestasRoot.dataset.mounted = "1";
-    } catch (e) { console.error(e); alert("No se pudo cargar Fiestas."); }
+    } catch (e) {
+      console.error("Error in showFiestas:", e);
+      alert("No se pudo cargar Fiestas.");
+    }
   }
+  console.log("Exiting showFiestas");
 }
 
 if (els.modeFiesta) {

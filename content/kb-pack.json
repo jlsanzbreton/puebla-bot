@@ -1,5 +1,5 @@
 {
-  "version": "2025.08.12-eca-v2",
+  "version": "2025.08.13-eca-v3",
   "faqs": [
     {
       "q": "¿Aportaciones para las fiestas?",
@@ -22,150 +22,146 @@
       "a": "En Android/Chrome verás 'Instalar app'. En iPhone/iPad, abre en Safari y usa 'Compartir' → 'Añadir a pantalla de inicio'."
     }
   ],
-  "events": [
+  "eventsExtra": [
     {
-      "title": "Paseo guiado por el monte de Morón (José Luis)",
-      "date": "Jueves 09:00",
-      "place": "Salida: Plaza Mayor",
-      "desc": "Se recomienda llevar bocata o bebida para mitad del recorrido."
+      "eventId": "jue-0900-paseo-guiado-por-el-monte-de-moron",
+      "desc": "Se recomienda llevar botas, agua, gorra, protección solar y ya optativo, un bocata.",
+      "shortName": "Paseo"
     },
     {
-      "title": "Pregón (Gaspar, por confirmar)",
-      "date": "Jueves 20:00",
-      "place": "Plaza Mayor",
-      "desc": "Apertura oficial de fiestas."
+      "eventId": "jue-2000-pregon-de-fiestas",
+      "desc": "Apertura oficial de fiestas. Pendiente confirmar con Gaspar.",
+      "shortName": "Pregón"
     },
     {
-      "title": "Ecapincho (1€)",
-      "date": "Jueves 20:30",
-      "place": "Plaza",
-      "desc": "Pincho de Eca (término inventado)."
+      "eventId": "jue-2030-ecapincho",
+      "desc": "Pincho de Eca (término inventado).",
+      "shortName": "Ecapincho"
     },
     {
-      "title": "Cine a la fresca (Rafa)",
-      "date": "Jueves 22:30",
-      "place": "Plaza / exterior",
-      "desc": "Proyección al aire libre (título por confirmar)."
+      "eventId": "jue-2230-cine-a-la-fresca",
+      "desc": "Proyección al aire libre (título por confirmar).",
+      "shortName": "Cine"
     },
     {
-      "title": "Sesión de Yoga (Tere)",
-      "date": "Viernes 10:00",
-      "place": "Plaza / Centro cultural",
-      "desc": ""
+      "eventId": "vie-1000-sesion-de-yoga",
+      "desc": "¿Qué tal una sesión de yoga para empezar el día?",
+      "shortName": "Yoga"
     },
     {
-      "title": "Taller de pulseras (Tere y alguien más)",
-      "date": "Viernes 12:00",
-      "place": "Centro cultural",
-      "desc": ""
+      "eventId": "vie-1200-taller-de-pulseras",
+      "desc": "Taller para crear pulseras personalizadas.",
+      "shortName": "Taller de Pulseras"
     },
     {
-      "title": "Campeonato de mus (Isabel, trofeo) y de rabino",
-      "date": "Viernes 18:00",
-      "place": "Bar / Plaza",
-      "desc": "Juego de cartas. Inscripción en el momento."
+      "eventId": "vie-1800-campeonato-de-mus",
+      "desc": "Juego de cartas. Inscripción en el momento.",
+      "shortName": "Mus"
     },
     {
-      "title": "Gincana",
-      "date": "Viernes 18:30",
-      "place": "Plaza y alrededores",
-      "desc": "Para todas las edades."
+      "eventId": "vie-1800-campeonato-de-rabino",
+      "desc": "Juego de cartas. Inscripción en el momento.",
+      "shortName": "Rabino"
     },
     {
-      "title": "Primera sesión de orquesta",
-      "date": "Viernes 20:00–21:30",
-      "place": "Plaza",
-      "desc": "Horario orientativo; puede variar."
+      "eventId": "vie-1830-gincana",
+      "desc": "Para todas las edades.",
+      "shortName": "Gincana"
     },
     {
-      "title": "Cena en la plaza (carrilleras)",
-      "date": "Viernes 21:30",
-      "place": "Plaza",
-      "desc": "Precio 13€ por persona."
+      "eventId": "vie-2000-orquesta-primera-sesion",
+      "desc": "Horario orientativo; puede variar.",
+      "shortName": "Orquesta"
     },
     {
-      "title": "Orquesta (2ª sesión) + bingo en el descanso",
-      "date": "Viernes 00:30–04:00",
-      "place": "Plaza",
-      "desc": "Bingo durante el descanso."
+      "eventId": "vie-2130-cena-en-la-plaza-carrilleras",
+      "desc": "Precio 13€ por persona.",
+      "shortName": "Cena"
     },
     {
-      "title": "Misa con música y subasta de trenzas",
-      "date": "Sábado 12:00",
-      "place": "Iglesia / Plaza",
-      "desc": "Tras la misa, subasta de trenzas."
+      "eventId": "vie-0030-orquesta-segunda-sesion",
+      "desc": "Bingo durante el descanso.",
+      "shortName": "Orquesta y Bingo"
     },
     {
-      "title": "Vermut con música y gildas",
-      "date": "Sábado 13:00",
-      "place": "Plaza / Bar",
-      "desc": "Gildas a determinar unidades."
+      "eventId": "sab-1200-misa-con-musica",
+      "desc": "Tras la misa, subasta de trenzas.",
+      "shortName": "Misa"
     },
     {
-      "title": "Campeonatos de guiñote, futbolín y ping pong",
-      "date": "Sábado 17:30",
-      "place": "Plaza / Centro cultural",
-      "desc": "Inscripciones in situ."
+      "eventId": "sab-1245-subasta-de-trenzas",
+      "desc": "Subasta de trenzas riquísimas de toda la vida, con gracia y salero.",
+      "shortName": "Subasta de Trenzas"
     },
     {
-      "title": "Juegos populares en la plaza",
-      "date": "Sábado 19:00",
-      "place": "Plaza",
-      "desc": "Definir pruebas (pañuelo, botella con la boca, pistolas de agua...)."
+      "eventId": "sab-1300-vermut-con-musica-y-gildas",
+      "desc": "Gildas con todo, para tomar un aperitivo como Dios manda.",
+      "shortName": "Vermut"
     },
     {
-      "title": "Mercadillo de artesanía / merchandising Puebla de Eca",
-      "date": "Sábado 20:00",
-      "place": "Plaza",
-      "desc": "Hablar con las hijas de Benita; venta de imanes de Virginie (5€ cada uno)."
+      "eventId": "sab-1730-campeonato-de-guinote",
+      "desc": "Inscripciones in situ.",
+      "shortName": "Guiñote"
     },
     {
-      "title": "DJ (1ª sesión)",
-      "date": "Sábado 20:30–22:00",
-      "place": "Plaza",
-      "desc": "Sesión musical."
+      "eventId": "sab-1730-campeonato-de-futbolin",
+      "desc": "Inscripciones in situ.",
+      "shortName": "Futbolín"
     },
     {
-      "title": "Tapa de migas (tickets)",
-      "date": "Sábado 22:00",
-      "place": "Plaza",
-      "desc": "Precio 5€ por ración. Venta con talonario (comprar en los chinos)."
+      "eventId": "sab-1730-campeonato-de-ping-pong",
+      "desc": "Inscripciones in situ.",
+      "shortName": "Ping-pong"
     },
     {
-      "title": "Bingo",
-      "date": "Sábado 23:30",
-      "place": "Plaza",
-      "desc": "Puede hacerse antes de la segunda sesión del DJ o en el descanso."
+      "eventId": "sab-1900-juegos-populares-en-la-plaza",
+      "desc": "Definir pruebas (pañuelo, botella con la boca, pistolas de agua...).",
+      "shortName": "Juegos"
     },
     {
-      "title": "DJ (2ª sesión)",
-      "date": "Sábado 00:00–04:00",
-      "place": "Plaza",
-      "desc": "Sesión nocturna."
+      "eventId": "sab-2000-mercadillo-de-artesania-y-merchandising",
+      "desc": "Hablar con las hijas de Benita; venta de imanes de Virginie (5€ cada uno).",
+      "shortName": "Mercadillo"
     },
     {
-      "title": "Comida en el río (paella)",
-      "date": "Domingo 14:00",
-      "place": "Río",
-      "desc": "Precio 13€ por persona. Este año sin embutido; se contratará paella y flan. Llevar bebidas y hielo (organizarlas)."
+      "eventId": "sab-2030-dj-primera-sesion",
+      "desc": "Sesión musical.",
+      "shortName": "DJ"
     },
     {
-      "title": "Campeonato de bolos, música y copeo",
-      "date": "Domingo 16:30",
-      "place": "Plaza / Río",
-      "desc": ""
+      "eventId": "sab-2200-racion-de-migas",
+      "desc": "Precio 5€ por ración. Venta con talonario (comprar en los chinos).",
+      "shortName": "Ración de Migas"
     },
     {
-      "title": "Tortillas y postres",
-      "date": "Domingo 21:00",
-      "place": "Plaza",
-      "desc": "Habrá sorteos; comprar regalos. Ver nota de compra de bebidas y menaje."
+      "eventId": "sab-2330-bingo",
+      "desc": "Puede hacerse antes de la segunda sesión del DJ o en el descanso.",
+      "shortName": "Bingo"
     },
     {
-      "title": "Entrega de trofeos y bingo",
-      "date": "Domingo 22:00",
-      "place": "Plaza",
-      "desc": ""
+      "eventId": "sab-0000-dj-segunda-sesion",
+      "desc": "Sesión nocturna.",
+      "shortName": "DJ"
+    },
+    {
+      "eventId": "dom-1400-comida-en-el-rio-paella",
+      "desc": "Precio 13€ por persona. Este año sin embutido; se contratará paella y flan. Llevar bebidas y hielo (organizarlas).",
+      "shortName": "Comida en el Río"
+    },
+    {
+      "eventId": "dom-1630-campeonato-de-bolos-musica-y-copeo",
+      "desc": "",
+      "shortName": "Bolos"
+    },
+    {
+      "eventId": "dom-2100-tortillas-y-postres",
+      "desc": "Habrá sorteos; comprar regalos. Ver nota de compra de bebidas y menaje.",
+      "shortName": "Tortillas y Postres"
+    },
+    {
+      "eventId": "dom-2200-entrega-de-trofeos-y-bingo",
+      "desc": "",
+      "shortName": "Entrega de Trofeos y Bingo"
     }
   ],
   "articles": [

@@ -78,7 +78,7 @@ export async function pullChanges() {
         for (const row of data) {
           const local = await db.registrations.get(row.id);
           if (!local || new Date(row.updated_at) >= new Date(local.updated_at)) {
-            await db.registrations.put({
+            const registration: Registration = {
               id: row.id,
               event_id: row.event_id,
               participant_id: row.participant_id,
@@ -91,7 +91,8 @@ export async function pullChanges() {
               deleted: row.deleted,
               created_at: row.created_at,
               updated_at: row.updated_at
-            });
+            };
+            await db.registrations.put(registration);
           }
         }
       });
