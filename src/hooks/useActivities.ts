@@ -8,8 +8,10 @@ export function useActivities(): Activity[] {
   
   return events.map(ev => {
     const extra = extrasMap.get(ev.id);
+    const session = ev.session as "mañana" | "tarde" | "noche" | undefined;
     return {
       ...ev,
+      session,
       shortName: extra?.shortName || ev.title.split(' ')[0].toLowerCase(),
       description: extra?.desc || "",
       isRegistered: false // Por defecto no registrado

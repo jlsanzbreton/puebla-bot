@@ -9,6 +9,8 @@ export interface Activity {
   description?: string;
   isRegistered?: boolean;
   relativeDay?: string;
+  monthDay?: string;
+  session?: "mañana" | "tarde" | "noche";
   host?: string;
   notes?: string;
   endTime?: string;
