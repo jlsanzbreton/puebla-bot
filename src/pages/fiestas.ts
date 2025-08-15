@@ -52,6 +52,10 @@ export async function mountFiestasPage(root: HTMLElement) {
   // --- FIN DE LA CORRECCIÓN ---
 
   root.innerHTML = layoutHTML(session);
+  
+  // Pequeño delay para asegurar que el DOM esté listo
+  await new Promise(resolve => setTimeout(resolve, 10));
+  
   await renderAgenda();
   await renderMyRegs(session);
   await renderAdminPanel(session);
@@ -145,7 +149,11 @@ function layoutHTML(session: Session) {
 }
 
 async function renderAgenda() {
-  const el = document.getElementById("agenda-list")!;
+  const el = document.getElementById("agenda-list");
+  if (!el) {
+    console.warn("Element #agenda-list not found, skipping renderAgenda");
+    return;
+  }
   el.innerHTML = "";
   const reactContainer = document.createElement("div");
   el.appendChild(reactContainer);
@@ -155,7 +163,12 @@ async function renderAgenda() {
 
 /* ---------- Mis inscripciones ---------- */
 async function renderMyRegs(session: Session) {
-  const el = document.getElementById("myregs")!;;
+  const el = document.getElementById("myregs");
+  if (!el) {
+    console.warn("Element #myregs not found, skipping renderMyRegs");
+    return;
+  }
+  
   const regs = await db.registrations
     .where("created_by_user_id").equals(session.userId)
     .and(r => !r.deleted)
@@ -206,7 +219,12 @@ async function renderMyRegs(session: Session) {
 
 /* ---------- Admin Panel ---------- */
 async function renderAdminPanel(session: Session) {
-  const el = document.getElementById("adminpanel")!;
+  const el = document.getElementById("adminpanel");
+  if (!el) {
+    console.warn("Element #adminpanel not found, skipping renderAdminPanel");
+    return;
+  }
+  
   if (session.role !== "admin") {
     el.innerHTML = `<div class="kb item">Acceso restringido.</div>`;
     return;
