@@ -8,6 +8,10 @@ dist/
 .vscode/
 .idea/
 
+# tools
+.vercel/
+.netlify/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

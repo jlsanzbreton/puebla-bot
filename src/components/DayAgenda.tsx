@@ -62,6 +62,7 @@ export function DayAgenda({ day, activities, onSelect }: DayAgendaProps) {
               activity={activity} 
               onClick={() => onSelect(activity)}
               isCompact={isMultiple}
+              isRegistered={activity.isRegistered}
             />
           ))}
         </div>

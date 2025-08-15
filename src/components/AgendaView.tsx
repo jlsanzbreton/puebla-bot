@@ -9,7 +9,8 @@ import events from "../../content/events.json";
 import kb from "../../content/kb-pack.json";
 
 export function AgendaView() {
-  const [selected, setSelected] = useState<Activity | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const { isLoading, registeredEventIds, joinActivity, leaveActivity } = useRegistrations();
 
   // 1. Procesamos la lista de actividades base y la memoizamos.
@@ -37,6 +38,12 @@ export function AgendaView() {
       isRegistered: registeredEventIds.has(act.id),
     }));
   }, [baseActivities, registeredEventIds]);
+
+  // Actividad seleccionada derivada de la lista enriquecida (si cambia el registro, se refleja)
+  const selected = useMemo(() => {
+    if (!selectedId) return null;
+    return enrichedActivities.find(a => a.id === selectedId) || null;
+  }, [selectedId, enrichedActivities]);
 
   if (isLoading) {
     return <div className="text-center p-8">Cargando agenda...</div>;
@@ -81,18 +88,24 @@ export function AgendaView() {
             key={key}
             day={label}
             activities={items}
-            onSelect={setSelected}
+            onSelect={(a) => setSelectedId(a.id)}
           />
         );
       })}
       {selected && (
         <ActivityModal
           activity={selected}
-          onClose={() => setSelected(null)}
-          onJoin={joinActivity}
-          onLeave={leaveActivity}
-          isJoined={selected.isRegistered}
-          isProcessing={isLoading}
+          onClose={() => setSelectedId(null)}
+          onJoin={async (a) => {
+            setBusyId(a.id);
+            try { await joinActivity(a); } finally { setBusyId(null); }
+          }}
+          onLeave={async (a) => {
+            setBusyId(a.id);
+            try { await leaveActivity(a); } finally { setBusyId(null); }
+          }}
+          isJoined={registeredEventIds.has(selected.id)}
+          isProcessing={busyId === selected.id}
         />
       )}
     </div>

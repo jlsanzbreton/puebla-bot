@@ -22,9 +22,10 @@ interface ActivityCardProps {
   activity: Activity;
   onClick: () => void;
   isCompact?: boolean;
+  isRegistered?: boolean;
 }
 
-export function ActivityCard({ activity, onClick, isCompact = false }: ActivityCardProps) {
+export function ActivityCard({ activity, onClick, isCompact = false, isRegistered = false }: ActivityCardProps) {
   const categoryStyle = categoryColors[activity.category] || "bg-slate-200 border-slate-300";
   
   return (
@@ -43,9 +44,16 @@ export function ActivityCard({ activity, onClick, isCompact = false }: ActivityC
         )}>
           {activity.shortName || activity.title}
         </h3>
-        <div className={cn(
-          isCompact ? "text-base" : "text-xl"
-        )}>👣</div>
+        <div className="flex items-center gap-2">
+          {isRegistered && (
+            <div className="bg-emerald-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              ✓ Inscrito
+            </div>
+          )}
+          <div className={cn(
+            isCompact ? "text-base" : "text-xl"
+          )}>👣</div>
+        </div>
       </div>
       
       <div className={cn(

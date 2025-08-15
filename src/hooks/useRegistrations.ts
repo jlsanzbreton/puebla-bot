@@ -1,22 +1,32 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { db, nowIso, Participant } from "../db/fiestas.db";
 import { Activity } from "../types";
 import { getSessionInfo } from "../core/auth";
+import { syncAll } from "../core/sync/sync";
 
 // Hook para gestionar las inscripciones a actividades
 export function useRegistrations() {
-  // 1. Obtenemos las inscripciones del usuario actual en tiempo real desde Dexie
-  const registrations = useLiveQuery(() => db.registrations.toArray(), []);
+  // 0. session user id (para filtrar solo mis inscripciones)
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => { (async () => { const s = await getSessionInfo(); setUserId(s.userId || null); })(); }, []);
 
-  const isLoading = registrations === undefined;
+  // 1. Mis inscripciones en Dexie, en vivo
+  const myRegistrations = useLiveQuery(async () => {
+    if (!userId) return [] as any[];
+    return db.registrations
+      .where("created_by_user_id")
+      .equals(userId)
+      .and(r => !r.deleted)
+      .toArray();
+  }, [userId]);
 
-  // 2. Creamos un conjunto con los IDs de los eventos a los que el usuario está apuntado
+  const isLoading = myRegistrations === undefined;
+
+  // 2. Conjunto de eventos a los que estoy apuntado
   const registeredEventIds = new Set(
-    (registrations || [])
-      .filter(r => !r.deleted)
-      .map(r => r.event_id)
+    (myRegistrations || []).map(r => r.event_id)
   );
 
   // 3. Función interna para asegurar que el participante (usuario actual) existe en la BD local.
@@ -53,6 +63,27 @@ export function useRegistrations() {
       return;
     }
 
+    // Evita duplicado: reactivar si existía borrado
+    const existing = await db.registrations
+      .where({ event_id: activity.id, participant_id: participant.id })
+      .first();
+    if (existing) {
+      if (existing.deleted) {
+        const patch = { deleted: false, updated_at: nowIso() } as const;
+        await db.registrations.update(existing.id, patch);
+        await db.outbox.add({
+          id: uuidv4(), table: "registrations", op: "rpc_register",
+          payload: { event_id: activity.id, participant_id: participant.id, payment_amount: activity.priceEUR || 0 }, created_at: nowIso()
+        });
+        
+        // Intenta sincronizar automáticamente si hay conexión
+        if (typeof navigator !== "undefined" && navigator.onLine) {
+          try { await syncAll(); } catch { /* noop */ }
+        }
+      }
+      return;
+    }
+
     const registration = {
       id: uuidv4(),
       event_id: activity.id,
@@ -68,18 +99,41 @@ export function useRegistrations() {
     };
 
     await db.registrations.add(registration);
-    await db.outbox.add({ id: uuidv4(), table: "registrations", op: "upsert", payload: registration, created_at: nowIso() });
+    await db.outbox.add({
+      id: uuidv4(),
+      table: "registrations",
+      op: "rpc_register",
+      payload: { event_id: registration.event_id, participant_id: registration.participant_id, payment_amount: registration.payment_amount ?? 0 },
+      created_at: nowIso()
+    });
+
+    // Intenta sincronizar automáticamente si hay conexión
+    if (typeof navigator !== "undefined" && navigator.onLine) {
+      try { await syncAll(); } catch { /* noop */ }
+    }
   }, [isLoading, ensureSelfParticipant]);
 
   // 5. Función para borrarse de una actividad
   const leaveActivity = useCallback(async (activity: Activity) => {
     if (isLoading) return;
-    const reg = await db.registrations.where({ event_id: activity.id }).first();
+
+    const participant = await ensureSelfParticipant();
+    if (!participant) return;
+
+    const reg = await db.registrations
+      .where({ event_id: activity.id, participant_id: participant.id, deleted: false })
+      .first();
+
     if (reg) {
       await db.registrations.update(reg.id, { deleted: true, updated_at: nowIso() });
       await db.outbox.add({ id: uuidv4(), table: "registrations", op: "rpc_cancel", payload: { id: reg.id }, created_at: nowIso() });
+      
+      // Intenta sincronizar automáticamente si hay conexión
+      if (typeof navigator !== "undefined" && navigator.onLine) {
+        try { await syncAll(); } catch { /* noop */ }
+      }
     }
-  }, [isLoading]);
+  }, [isLoading, ensureSelfParticipant]);
 
   // 6. El hook devuelve el estado de carga, los IDs de eventos registrados y las funciones
   return { isLoading, registeredEventIds, joinActivity, leaveActivity };
