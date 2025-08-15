@@ -92,14 +92,14 @@ export function ActivityModal({
               <strong>Lugar:</strong> {activity.location}
             </p>
           )}
-          {"host" in activity && activity.host && (
+          {activity.host && (
             <p>
               <strong>Responsable:</strong> {activity.host}
             </p>
           )}
-          {"priceEUR" in activity && activity.priceEUR && (
+          {activity.priceEUR != null && (
             <p>
-              <strong>Precio:</strong> {activity.priceEUR}
+              <strong>Precio:</strong> {activity.priceEUR > 0 ? `${activity.priceEUR}€` : 'Gratis'}
             </p>
           )}
           {activity.notes && (

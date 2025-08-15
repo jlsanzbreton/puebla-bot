@@ -5,17 +5,10 @@ import { getSessionInfo, signInWithMagic, signOut } from "../core/auth";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { AgendaView } from "../components/AgendaView";
+import { v4 as uuidv4 } from "uuid";
 
 type Role = "admin" | "user";
 type Session = { userId: string; role: Role; displayName: string };
-
-type EventCore = {
-  id: string; title: string; startsAt?: string; endsAt?: string;
-  relativeDay?: string; time?: string; location?: string;
-  priceEUR?: number; notifyMinutesBefore?: number;
-};
-
-type KbPack = { events: EventCore[] };
 
 export async function mountFiestasPage(root: HTMLElement) {
   // -------- AUTH GATE ----------
@@ -33,12 +26,33 @@ export async function mountFiestasPage(root: HTMLElement) {
     displayName: ses.displayName ?? "Yo"
   };
 
-  await ensureSelfParticipant(session);
-
-  const pack: KbPack = await fetch("/content/kb-pack.json").then(r => r.json());
+  // --- CORRECCIÓN APLICADA AQUÍ ---
+  // Se asegura de que el participante existe en Dexie antes de renderizar React.
+  try {
+    const existingParticipant = await db.participants.where({ owner_user_id: session.userId }).first();
+    if (!existingParticipant) {
+      const newParticipant: Participant = {
+        id: uuidv4(), // Usamos uuid para generar un ID único
+        owner_user_id: session.userId,
+        display_name: session.displayName,
+        deleted: false,
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+      await db.participants.add(newParticipant);
+      // Añadimos la operación a la outbox para sincronizar con Supabase
+      await db.outbox.add({ id: uuidv4(), table: "participants", op: "upsert", payload: newParticipant, created_at: nowIso() });
+    }
+  } catch (e) {
+    console.error("Error al asegurar el participante en Dexie:", e);
+    // Si falla la escritura en la BD, no continuamos para evitar más errores.
+    root.innerHTML = `<div class="p-4 text-red-500">Error crítico al inicializar la base de datos local.</div>`;
+    return;
+  }
+  // --- FIN DE LA CORRECCIÓN ---
 
   root.innerHTML = layoutHTML(session);
-  await renderAgenda(pack.events, session);
+  await renderAgenda();
   await renderMyRegs(session);
   await renderAdminPanel(session);
 
@@ -130,17 +144,11 @@ function layoutHTML(session: Session) {
   </div>`;
 }
 
-async function renderAgenda(_events: EventCore[], _session: Session) {
+async function renderAgenda() {
   const el = document.getElementById("agenda-list")!;
-  
-  // Limpiar el contenido anterior
   el.innerHTML = "";
-  
-  // Crear un contenedor para React
   const reactContainer = document.createElement("div");
   el.appendChild(reactContainer);
-  
-  // Renderizar el componente React
   const root = createRoot(reactContainer);
   root.render(React.createElement(AgendaView));
 }
@@ -238,7 +246,6 @@ async function renderAdminPanel(session: Session) {
     tbl.querySelectorAll<HTMLButtonElement>("[data-paid]").forEach(btn => {
       btn.addEventListener("click", async () => {
         const regId = btn.dataset.paid!;
-        // Llama RPC (requiere rol admin en tu perfil)
         const { error } = await supa.rpc("api_mark_paid", { p_registration_id: regId, p_method: "cash", p_amount: null });
         if (error) { alert("Error marcando pagado: " + error.message); return; }
         await syncAll();
@@ -249,22 +256,6 @@ async function renderAdminPanel(session: Session) {
 }
 
 /* ---------- Participants & Registrations (Dexie) ---------- */
-async function ensureSelfParticipant(session: Session) {
-  const me = await db.participants.where({ owner_user_id: session.userId, display_name: session.displayName }).first();
-  if (me) return me;
-  const p: Participant = {
-    id: crypto.randomUUID(),
-    owner_user_id: session.userId,
-    display_name: session.displayName,
-    deleted: false,
-    created_at: nowIso(),
-    updated_at: nowIso()
-  };
-  await db.participants.add(p);
-  await db.outbox.add({ id: crypto.randomUUID(), table: "participants", op: "upsert", payload: p, created_at: nowIso() });
-  return p;
-}
-
 
 async function cancelRegistrationLocal(regId: string) {
   const row = await db.registrations.get(regId);
@@ -272,7 +263,7 @@ async function cancelRegistrationLocal(regId: string) {
   row.deleted = true;
   row.updated_at = nowIso();
   await db.registrations.put(row);
-  await db.outbox.add({ id: crypto.randomUUID(), table: "registrations", op: "rpc_cancel", payload: { id: regId }, created_at: nowIso() });
+  await db.outbox.add({ id: uuidv4(), table: "registrations", op: "rpc_cancel", payload: { id: regId }, created_at: nowIso() });
 }
 
 /* ---------- Utils ---------- */
@@ -285,5 +276,6 @@ function exportCSV(regs: Registration[]) {
 }
 
 function escapeHTML(s: string) {
-  return s.replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]!));
+  const htmlEscapes: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return s.replace(/[&<>"']/g, (c) => htmlEscapes[c]);
 }

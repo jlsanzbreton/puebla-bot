@@ -232,7 +232,7 @@ async function loadKB() {
 function renderKBSummary() {
   const items = [];
   items.push(`<div class="item border-thick"><strong>FAQ:</strong> ${kb.faqs.length}</div>`);
-  items.push(`<div class="item border-thick"><strong>Eventos:</strong> ${kb.events.length}</div>`);
+  items.push(`<div class="item border-thick"><strong>Eventos:</strong> ${kb.eventsExtra.length}</div>`);
   items.push(`<div class="item border-thick"><strong>Artículos:</strong> ${kb.articles.length}</div>`);
   items.push(`<div class="item border-thick"><strong>Contactos:</strong> ${kb.contacts.length}</div>`);
   els.kb.innerHTML = items.join("");
