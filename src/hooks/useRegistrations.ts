@@ -53,7 +53,7 @@ export function useRegistrations() {
   }, []);
 
   // 4. Función para apuntarse a una actividad
-  const joinActivity = useCallback(async (activity: Activity) => {
+  const joinActivity = useCallback(async (activity: Activity): Promise<string | undefined> => {
     if (isLoading) return;
 
     const participant = await ensureSelfParticipant();
@@ -77,11 +77,13 @@ export function useRegistrations() {
         });
         
         // Intenta sincronizar automáticamente si hay conexión
-        if (typeof navigator !== "undefined" && navigator.onLine) {
-          try { await syncAll(); } catch { /* noop */ }
+        if (typeof document !== "undefined") {
+          try { document.dispatchEvent(new CustomEvent('outbox-changed')); } catch {}
         }
+        // Disparar sync en background si hay conexión
+        if (typeof navigator !== "undefined" && navigator.onLine) void syncAll();
       }
-      return;
+      return existing.id;
     }
 
     const registration = {
@@ -106,11 +108,13 @@ export function useRegistrations() {
       payload: { event_id: registration.event_id, participant_id: registration.participant_id, payment_amount: registration.payment_amount ?? 0 },
       created_at: nowIso()
     });
-
-    // Intenta sincronizar automáticamente si hay conexión
-    if (typeof navigator !== "undefined" && navigator.onLine) {
-      try { await syncAll(); } catch { /* noop */ }
+    if (typeof document !== "undefined") {
+      try { document.dispatchEvent(new CustomEvent('outbox-changed')); } catch {}
     }
+    // Lanzar sync en background si hay conexión
+    if (typeof navigator !== "undefined" && navigator.onLine) void syncAll();
+
+    return registration.id;
   }, [isLoading, ensureSelfParticipant]);
 
   // 5. Función para borrarse de una actividad

@@ -11,6 +11,7 @@ interface ActivityModalProps {
   onExportICS?: (activity: Activity) => void;
   isJoined?: boolean;
   isProcessing?: boolean;
+  isSavedLocal?: boolean;
 }
 
 export function ActivityModal({
@@ -21,6 +22,7 @@ export function ActivityModal({
   onExportICS,
   isJoined = false,
   isProcessing = false,
+  isSavedLocal = false,
 }: ActivityModalProps) {
   const firstBtnRef = useRef<HTMLButtonElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -110,14 +112,14 @@ export function ActivityModal({
         </div>
 
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-          {!isJoined ? (
+      {!isJoined ? (
             <button
               ref={firstBtnRef}
               onClick={() => onJoin?.(activity)}
               disabled={isProcessing}
               className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
             >
-              {isProcessing ? "Guardando…" : "Apuntarme"}
+        {isProcessing ? "Guardando…" : isSavedLocal ? "Guardado localmente" : "Apuntarme"}
             </button>
           ) : (
             <button

@@ -11,6 +11,7 @@ import kb from "../../content/kb-pack.json";
 export function AgendaView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [savedLocalId, setSavedLocalId] = useState<string | null>(null);
   const { isLoading, registeredEventIds, joinActivity, leaveActivity } = useRegistrations();
 
   // 1. Procesamos la lista de actividades base y la memoizamos.
@@ -98,7 +99,15 @@ export function AgendaView() {
           onClose={() => setSelectedId(null)}
           onJoin={async (a) => {
             setBusyId(a.id);
-            try { await joinActivity(a); } finally { setBusyId(null); }
+            try {
+              const regId = await joinActivity(a);
+              if (regId) {
+                // Mostrar que se guardó localmente para esta actividad
+                setSavedLocalId(a.id);
+                // limpia el flag después de 4s
+                setTimeout(() => setSavedLocalId(null), 4000);
+              }
+            } finally { setBusyId(null); }
           }}
           onLeave={async (a) => {
             setBusyId(a.id);
@@ -106,6 +115,7 @@ export function AgendaView() {
           }}
           isJoined={registeredEventIds.has(selected.id)}
           isProcessing={busyId === selected.id}
+          isSavedLocal={savedLocalId === selected.id}
         />
       )}
     </div>

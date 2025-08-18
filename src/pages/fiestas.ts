@@ -58,6 +58,7 @@ export async function mountFiestasPage(root: HTMLElement) {
   
   await renderAgenda();
   await renderMyRegs(session);
+  wireOutboxBadge();
   await renderAdminPanel(session);
 
   // tabs
@@ -121,7 +122,8 @@ function layoutHTML(session: Session) {
   return `
   <div class="card">
     <div class="status" style="gap:.6rem">
-      <span class="badge">Hola, ${escapeHTML(session.displayName)} (${session.role})</span>
+    <span class="badge">Hola, ${escapeHTML(session.displayName)} (${session.role})</span>
+    <span id="outbox-badge" class="badge" title="Operaciones pendientes">0</span>
       <button id="btnSync" class="outline small">Sincronizar</button>
       <button id="btnLogout" class="outline small">Salir</button>
     </div>
@@ -146,6 +148,20 @@ function layoutHTML(session: Session) {
       <div id="adminpanel"></div>
     </section>
   </div>`;
+}
+
+async function countPendingOutbox(): Promise<number> {
+  try {
+    return await db.outbox.count();
+  } catch { return 0; }
+}
+
+function wireOutboxBadge() {
+  const el = document.getElementById('outbox-badge');
+  if (!el) return;
+  const update = async () => { const n = await countPendingOutbox(); el.textContent = String(n); el.classList.toggle('warn', n>0); };
+  update();
+  document.addEventListener('outbox-changed', update);
 }
 
 async function renderAgenda() {

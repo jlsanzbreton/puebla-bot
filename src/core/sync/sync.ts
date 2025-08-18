@@ -5,6 +5,20 @@ import { supa } from "../api/supabase";
 
 /** PUSH: intenta vaciar outbox (idempotente por claves únicas en server) */
 export async function pushOutbox() {
+  // Evitar ejecutar push cuando no hay sesión autenticada.
+  // Si la app pierde foco y la sesión cambia/expira, preferimos dejar los items
+  // en la outbox para reintentar más tarde con credenciales válidas.
+  try {
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      console.warn("pushOutbox: no authenticated session, skipping push");
+      return;
+    }
+  } catch (e) {
+    console.warn("pushOutbox: error getting session, skipping push", e);
+    return;
+  }
+
   const items = await db.outbox.orderBy("created_at").toArray();
   for (const it of items) {
     try {
@@ -29,7 +43,8 @@ export async function pushOutbox() {
       } else if (it.table === "registrations" && it.op === "rpc_cancel") {
         await supa.rpc("api_cancel_registration", { p_registration_id: it.payload.id });
       }
-      await db.outbox.delete(it.id);
+  await db.outbox.delete(it.id);
+  try { if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('outbox-changed')); } catch {}
     } catch (e) {
       // Si falla, dejamos el item para reintentar más tarde
       console.warn("pushOutbox failed", e);

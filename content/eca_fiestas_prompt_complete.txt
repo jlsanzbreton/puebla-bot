@@ -1,0 +1,785 @@
+TITLE: App Fiestas Puebla de Eca — PWA offline-first con Supabase + Dexie
+
+GOAL:
+- Autenticación Supabase; roles admin/user (profiles.role o auth_is_admin()).
+- Usuarios: apuntarse ellos y sus 'participants' (hijos/abuelos/amigos). 
+- Agenda personal (qué, cuándo, dónde, quién).
+- Cálculo de 'cuánto debo' por activity y total.
+- Panel Admin por actividad: inscritos, deudas, marcar pagos (paid/waived), método, amounts, export CSV, seleccionar actividades donde es organizador/colaborador.
+
+TECH STACK (REQUIRED):
+- React + TypeScript + Vite + PWA (manifest + SW). 
+- Supabase (Auth, Postgres, RLS); Dexie (IndexedDB) espejo + cola offline.
+- React Query + Context (auth/profile/isAdmin).
+- Deploy Netlify (.env VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).
+
+DATABASE (MUST MATCH):
+- profiles{id(uuid->auth.users.id),email,display_name,role in('admin','user'),created_at}
+- participants{id uuid pk, owner_user_id->profiles.id, display_name, birth_year?, notes?, deleted bool, created_at, updated_at}
+- registrations{id uuid pk, event_id text, participant_id->participants.id, created_by_user_id->profiles.id, payment_status enum('pending','paid','waived') default 'pending', payment_amount numeric?, payment_method in('cash','bizum','other')?, is_confirmed bool default true, deleted bool, created_at, updated_at}
+- RLS: owner o admin; UPDATE registrations solo admin.
+- Function: public.auth_is_admin() -> boolean.
+
+DEXIE MIRROR:
+- events(pk id, index code), profiles(pk id), participants(pk id idx owner_user_id), registrations(pk id idx event_id/participant_id/created_by_user_id), mutations cola.
+
+SYNC:
+- Pull tras login (profiles, participants propios, registrations visibles).
+- Offline→enqueue mutations; reconectar→replay respetando RLS.
+- Conflictos last-write-wins via updated_at; ante 409, avisar y refetch.
+
+PAGES:
+- Login/Perfil, Agenda pública (catálogo + detalle + CTA Apuntarme/Apuntar a…), Mis participantes (CRUD), Mis inscripciones, Mi agenda, Mi saldo, Panel Admin.
+
+BUSINESS:
+- registrations.event_id = events_catalog.events[i].code (texto).
+- payment_amount desde pricing (fijo/edad/tier) o null.
+- Borrado suave deleted=true; tickets para Carrilleras/Migas/Paella.
+- Horarios 2025 con fechas exactas (Europe/Madrid) mapeados abajo.
+
+DELIVERABLES:
+- Código React+TS listo, PWA, Supabase y Dexie conectados, y el JSON 'events_catalog.json' siguiente.
+
+-------------------------------------------------------------------------------
+events_catalog.json
+-------------------------------------------------------------------------------
+{
+  "version": "2025.08.18-eca-fiesta-v2",
+  "currency": "EUR",
+  "faqs": [
+    {
+      "q": "¿Aportaciones generales para las fiestas?",
+      "a": "Menores de 4 años: sin aportación; de 4 a 12 años: 5 €; mayores de 13 años: 10 €."
+    }
+  ],
+  "global_pricing_rules": [
+    {
+      "code": "APORTACION_GENERAL",
+      "description": "Aportaciones por edad para apoyar las fiestas (solo una vez por persona).",
+      "age_based": [
+        {
+          "max": 3,
+          "price": 0
+        },
+        {
+          "min": 4,
+          "max": 12,
+          "price": 5
+        },
+        {
+          "min": 13,
+          "price": 10
+        }
+      ],
+      "notes": "Cobro único por persona durante las fiestas."
+    }
+  ],
+  "events": [
+    {
+      "code": "JUE_PASEO_MORON",
+      "title": "Paseo guiado por el monte de Morón",
+      "description": "Paseo guiado. Se recomienda llevar agua y algún tentempié.",
+      "category": "otros",
+      "day": "JUEVES",
+      "start_time_local": "09:00",
+      "location": {
+        "name": "Monte de Morón"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Actividad gratuita."
+      },
+      "organizers": [
+        {
+          "name": "José Luis",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "notes": "Posible avituallamiento a mitad del recorrido."
+      },
+      "id": "eca-2025-001",
+      "start_datetime": "2025-08-21T09:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "JUE_PREGON",
+      "title": "Pregón de Fiestas",
+      "description": "Apertura oficial de las fiestas.",
+      "category": "otros",
+      "day": "JUEVES",
+      "start_time_local": "20:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acto abierto."
+      },
+      "organizers": [
+        {
+          "name": "Gaspar",
+          "role": "orador"
+        },
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-002",
+      "start_datetime": "2025-08-21T20:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "JUE_ECAPINCHO",
+      "title": "Ecapincho",
+      "description": "Pincho popular.",
+      "category": "comida",
+      "day": "JUEVES",
+      "start_time_local": "20:30",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": 1,
+        "notes": "Venta en el momento."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "sales": "on-site"
+      },
+      "id": "eca-2025-003",
+      "start_datetime": "2025-08-21T20:30:00",
+      "end_datetime": null
+    },
+    {
+      "code": "JUE_CINE_FRESCA",
+      "title": "Cine a la fresca",
+      "description": "Proyección nocturna al aire libre.",
+      "category": "otros",
+      "day": "JUEVES",
+      "start_time_local": "22:30",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Actividad gratuita."
+      },
+      "organizers": [
+        {
+          "name": "Rafa",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-004",
+      "start_datetime": "2025-08-21T22:30:00",
+      "end_datetime": null
+    },
+    {
+      "code": "VIE_YOGA",
+      "title": "Sesión de Yoga",
+      "description": "Sesión matinal de yoga.",
+      "category": "otros",
+      "day": "VIERNES",
+      "start_time_local": "10:00",
+      "location": {
+        "name": "Por confirmar"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Actividad gratuita."
+      },
+      "organizers": [
+        {
+          "name": "Tere",
+          "role": "organizadora"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-005",
+      "start_datetime": "2025-08-22T10:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "VIE_TALLER_PULSERAS",
+      "title": "Taller de pulseras",
+      "description": "Taller creativo.",
+      "category": "otros",
+      "day": "VIERNES",
+      "start_time_local": "12:00",
+      "location": {
+        "name": "Por confirmar"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Actividad gratuita salvo materiales si se decide."
+      },
+      "organizers": [
+        {
+          "name": "Tere",
+          "role": "organizadora"
+        },
+        {
+          "name": "Colaborador/a",
+          "role": "colaborador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-006",
+      "start_datetime": "2025-08-22T12:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "VIE_CAMPEONATO_MUS_RABINO",
+      "title": "Campeonato de Mus y de Rabino",
+      "description": "Torneos de cartas. Trofeo de mus a cargo de Isabel.",
+      "category": "juego",
+      "day": "VIERNES",
+      "start_time_local": "18:00",
+      "location": {
+        "name": "Por confirmar"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Inscripción gratuita salvo que la organización decida otra cosa."
+      },
+      "organizers": [
+        {
+          "name": "Isabel",
+          "role": "organizadora"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "trophies": true
+      },
+      "id": "eca-2025-007",
+      "start_datetime": "2025-08-22T18:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "VIE_GINCANA",
+      "title": "Gincana",
+      "description": "Pruebas por equipos.",
+      "category": "juego",
+      "day": "VIERNES",
+      "start_time_local": "18:30",
+      "location": {
+        "name": "Por confirmar"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Actividad gratuita."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-008",
+      "start_datetime": "2025-08-22T18:30:00",
+      "end_datetime": null
+    },
+    {
+      "code": "VIE_ORQUESTA_1",
+      "title": "Orquesta (1ª sesión)",
+      "description": "Primera sesión musical.",
+      "category": "concierto",
+      "day": "VIERNES",
+      "start_time_local": "20:00",
+      "end_time_local": "21:30",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acceso libre."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "schedule_flexible": true
+      },
+      "id": "eca-2025-009",
+      "start_datetime": "2025-08-22T20:00:00",
+      "end_datetime": "2025-08-22T21:30:00"
+    },
+    {
+      "code": "VIE_CENA_CARRILLERAS",
+      "title": "Cena en la plaza (Carrilleras)",
+      "description": "Cena popular. Ticket imprescindible.",
+      "category": "comida",
+      "day": "VIERNES",
+      "start_time_local": "21:30",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": 13,
+        "notes": "Incluye plato. Agua y vino del bar."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "ticket_required": true
+      },
+      "id": "eca-2025-010",
+      "start_datetime": "2025-08-22T21:30:00",
+      "end_datetime": null
+    },
+    {
+      "code": "VIE_ORQUESTA_2",
+      "title": "Orquesta (2ª sesión)",
+      "description": "Segunda sesión musical (bingo en el descanso).",
+      "category": "concierto",
+      "day": "VIERNES",
+      "start_time_local": "00:30",
+      "end_time_local": "04:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acceso libre."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "bingo": "en el descanso"
+      },
+      "id": "eca-2025-011",
+      "start_datetime": "2025-08-23T00:30:00",
+      "end_datetime": "2025-08-22T04:00:00"
+    },
+    {
+      "code": "SAB_MISA_MUSICAL_SUBASTA",
+      "title": "Misa con música y subasta de trenzas",
+      "description": "Misa con música; al finalizar, subasta de trenzas (aprox. 8 unidades).",
+      "category": "otros",
+      "day": "SÁBADO",
+      "start_time_local": "12:00",
+      "location": {
+        "name": "Iglesia"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acto abierto."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-012",
+      "start_datetime": "2025-08-23T12:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "SAB_VERMUT_GILDAS",
+      "title": "Vermut con música y gildas",
+      "description": "Vermut popular con música. Gildas a definir unidades.",
+      "category": "comida",
+      "day": "SÁBADO",
+      "start_time_local": "13:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Consumo en barra."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-013",
+      "start_datetime": "2025-08-23T13:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "SAB_CAMPEONATOS_TARDE",
+      "title": "Campeonatos: guiñote, futbolín y ping pong",
+      "description": "Torneos de tarde.",
+      "category": "juego",
+      "day": "SÁBADO",
+      "start_time_local": "17:30",
+      "location": {
+        "name": "Por confirmar"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Inscripción gratuita salvo cambios."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-014",
+      "start_datetime": "2025-08-23T17:30:00",
+      "end_datetime": null
+    },
+    {
+      "code": "SAB_JUEGOS_POPULARES",
+      "title": "Juegos populares en la plaza",
+      "description": "Juegos tradicionales (pañuelo, llenar botella con la boca, etc.).",
+      "category": "juego",
+      "day": "SÁBADO",
+      "start_time_local": "19:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Actividad gratuita."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "to_define": [
+          "lista de juegos exactos"
+        ]
+      },
+      "id": "eca-2025-015",
+      "start_datetime": "2025-08-23T19:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "SAB_MERCADILLO_ARTESANIA",
+      "title": "Mercadillo de artesanía y merchandising",
+      "description": "Puestos de artesanía; merchandising (imanes 5 € unidad).",
+      "category": "otros",
+      "day": "SÁBADO",
+      "start_time_local": "20:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Venta en puestos."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "merch_imanes": 5
+      },
+      "id": "eca-2025-016",
+      "start_datetime": "2025-08-23T20:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "SAB_DJ_1",
+      "title": "DJ (sesión 1)",
+      "description": "Sesión musical de tarde-noche.",
+      "category": "concierto",
+      "day": "SÁBADO",
+      "start_time_local": "20:30",
+      "end_time_local": "22:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acceso libre."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-017",
+      "start_datetime": "2025-08-23T20:30:00",
+      "end_datetime": "2025-08-23T22:00:00"
+    },
+    {
+      "code": "SAB_TAPA_MIGAS",
+      "title": "Tapa/Ración de migas",
+      "description": "Ración de migas. Venta mediante tickets.",
+      "category": "comida",
+      "day": "SÁBADO",
+      "start_time_local": "22:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": 5,
+        "notes": "Ticket imprescindible."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "ticket_required": true
+      },
+      "id": "eca-2025-018",
+      "start_datetime": "2025-08-23T22:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "SAB_BINGO",
+      "title": "Bingo",
+      "description": "Bingo nocturno.",
+      "category": "otros",
+      "day": "SÁBADO",
+      "start_time_local": "23:30",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acceso libre. Cartones según organización."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-019",
+      "start_datetime": "2025-08-23T23:30:00",
+      "end_datetime": null
+    },
+    {
+      "code": "SAB_DJ_2",
+      "title": "DJ (sesión 2)",
+      "description": "Sesión de madrugada.",
+      "category": "concierto",
+      "day": "SÁBADO",
+      "start_time_local": "00:00",
+      "end_time_local": "04:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acceso libre."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-020",
+      "start_datetime": "2025-08-24T00:00:00",
+      "end_datetime": "2025-08-23T04:00:00"
+    },
+    {
+      "code": "DOM_PAELLA_RIO",
+      "title": "Comida en el río (Paella)",
+      "description": "Paella comunitaria junto al río. Ticket imprescindible.",
+      "category": "comida",
+      "day": "DOMINGO",
+      "start_time_local": "14:00",
+      "location": {
+        "name": "Zona del Río"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": 13,
+        "notes": "Solo paella y flan. Sin embutido ni ensalada."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {
+        "ticket_required": true
+      },
+      "id": "eca-2025-021",
+      "start_datetime": "2025-08-24T14:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "DOM_BOLOS_COPEO",
+      "title": "Campeonato de bolos, música y copeo",
+      "description": "Tarde de bolos con música y copeo.",
+      "category": "deporte",
+      "day": "DOMINGO",
+      "start_time_local": "16:30",
+      "location": {
+        "name": "Zona del Río"
+      },
+      "requires_registration": true,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Actividad gratuita; consumiciones aparte."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-022",
+      "start_datetime": "2025-08-24T16:30:00",
+      "end_datetime": null
+    },
+    {
+      "code": "DOM_TORTILLAS_POSTRES",
+      "title": "Tortillas y postres",
+      "description": "Merienda popular (tortilla de tomate y jamón, refrescos).",
+      "category": "comida",
+      "day": "DOMINGO",
+      "start_time_local": "21:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Organización compra pan, jamón, tomate, bebidas; posible compra de tortillas."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-023",
+      "start_datetime": "2025-08-24T21:00:00",
+      "end_datetime": null
+    },
+    {
+      "code": "DOM_TROFEOS_BINGO",
+      "title": "Entrega de trofeos y bingo",
+      "description": "Clausura con trofeos y bingo final.",
+      "category": "otros",
+      "day": "DOMINGO",
+      "start_time_local": "22:00",
+      "location": {
+        "name": "Plaza del Pueblo"
+      },
+      "requires_registration": false,
+      "pricing": {
+        "currency": "EUR",
+        "default_price": null,
+        "notes": "Acto abierto."
+      },
+      "organizers": [
+        {
+          "name": "Comisión de Fiestas",
+          "role": "organizador"
+        }
+      ],
+      "visibility": "public",
+      "metadata": {},
+      "id": "eca-2025-024",
+      "start_datetime": "2025-08-24T22:00:00",
+      "end_datetime": null
+    }
+  ]
+}
