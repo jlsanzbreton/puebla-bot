@@ -97,10 +97,10 @@ export function AgendaView() {
         <ActivityModal
           activity={selected}
           onClose={() => setSelectedId(null)}
-          onJoin={async (a) => {
+          onJoin={async (a, opts) => {
             setBusyId(a.id);
             try {
-              const regId = await joinActivity(a);
+              const regId = await joinActivity(a, opts as any);
               if (regId) {
                 // Mostrar que se guardó localmente para esta actividad
                 setSavedLocalId(a.id);

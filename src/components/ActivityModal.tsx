@@ -1,12 +1,14 @@
 // src/components/ActivityModal.tsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Activity } from "../types";
+import { useParticipants } from "../hooks/useParticipants";
+import { getSessionInfo } from "../core/auth";
 
 interface ActivityModalProps {
   activity: Activity | null;
   onClose: () => void;
-  onJoin?: (activity: Activity) => void;
+  onJoin?: (activity: Activity, opts?: { participantId?: string; asOrganizer?: boolean }) => void;
   onLeave?: (activity: Activity) => void;
   onExportICS?: (activity: Activity) => void;
   isJoined?: boolean;
@@ -26,6 +28,19 @@ export function ActivityModal({
 }: ActivityModalProps) {
   const firstBtnRef = useRef<HTMLButtonElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
+  const [action, setAction] = useState<'self'|'other'|'organizer'>('self');
+  const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
+  const [newName, setNewName] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const s = await getSessionInfo();
+      setIsAdmin(s.role === 'admin');
+    })();
+  }, []);
+
+  const { items: myParticipants, addParticipant } = useParticipants(isAdmin ? undefined : undefined);
 
   const open = !!activity;
 
@@ -49,6 +64,16 @@ export function ActivityModal({
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose();
+  };
+
+  const addAndSelect = async () => {
+    const s = await getSessionInfo();
+    if (!s.userId) return alert('No session');
+    if (!newName.trim()) return alert('Escribe un nombre');
+    const p = await addParticipant(s.userId, newName.trim());
+    setSelectedParticipant(p.id);
+    setNewName('');
+    setAction('other');
   };
 
   const modalContent = (
@@ -112,10 +137,31 @@ export function ActivityModal({
         </div>
 
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-      {!isJoined ? (
+          <div style={{display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginBottom: 8}}>
+            <label style={{display:'flex',gap:8,alignItems:'center'}}>
+              <input type="radio" checked={action==='self'} onChange={() => setAction('self')} /> Yo
+            </label>
+            <label style={{display:'flex',gap:8,alignItems:'center'}}>
+              <input type="radio" checked={action==='other'} onChange={() => setAction('other')} /> Otra persona
+            </label>
+            <label style={{display:'flex',gap:8,alignItems:'center'}}>
+              <input type="radio" checked={action==='organizer'} onChange={() => setAction('organizer')} disabled={!isAdmin} /> Como organizador
+            </label>
+          </div>
+          {action === 'other' && (
+            <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+              <select value={selectedParticipant ?? ''} onChange={e => setSelectedParticipant(e.target.value)}>
+                <option value="">-- seleccionar --</option>
+                {myParticipants.map(p => <option key={p.id} value={p.id}>{p.display_name}</option>)}
+              </select>
+              <input placeholder="Añadir nombre" value={newName} onChange={e => setNewName(e.target.value)} />
+              <button onClick={addAndSelect} className="outline small">Añadir</button>
+            </div>
+          )}
+          {!isJoined ? (
             <button
               ref={firstBtnRef}
-              onClick={() => onJoin?.(activity)}
+              onClick={() => onJoin?.(activity, action === 'other' ? { participantId: selectedParticipant ?? undefined } : action === 'organizer' ? { asOrganizer: true } : undefined)}
               disabled={isProcessing}
               className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
             >

@@ -53,14 +53,32 @@ export function useRegistrations() {
   }, []);
 
   // 4. Función para apuntarse a una actividad
-  const joinActivity = useCallback(async (activity: Activity): Promise<string | undefined> => {
+  const joinActivity = useCallback(async (activity: Activity, opts?: { participantId?: string; asOrganizer?: boolean }): Promise<string | undefined> => {
     if (isLoading) return;
 
-    const participant = await ensureSelfParticipant();
-    if (!participant) {
-      console.error("No se pudo obtener la información del participante para la inscripción.");
-      alert("Error: No se pudo identificar al usuario para la inscripción.");
-      return;
+    const session = await getSessionInfo();
+    const currentUserId = session.userId;
+    const currentRole = session.role;
+
+    let participant: Participant | undefined;
+    if (opts?.participantId) {
+      participant = await db.participants.get(opts.participantId);
+      // si no existe o no es de mi propiedad y no soy admin, fallamos
+      if (!participant) {
+        alert("Participante no encontrado.");
+        return;
+      }
+      if (participant.owner_user_id !== currentUserId && currentRole !== "admin") {
+        alert("No tienes permisos para inscribir a esa persona.");
+        return;
+      }
+    } else {
+      participant = await ensureSelfParticipant();
+      if (!participant) {
+        console.error("No se pudo obtener la información del participante para la inscripción.");
+        alert("Error: No se pudo identificar al usuario para la inscripción.");
+        return;
+      }
     }
 
     // Evita duplicado: reactivar si existía borrado
@@ -91,10 +109,12 @@ export function useRegistrations() {
       event_id: activity.id,
       participant_id: participant.id,
       participant_name: participant.display_name,
-      created_by_user_id: participant.owner_user_id,
-      payment_status: "pending" as const,
-      payment_amount: activity.priceEUR || 0,
-      is_confirmed: false,
+      // quien crea la inscripción es el usuario en sesión
+      created_by_user_id: currentUserId || participant.owner_user_id,
+      // si se registra como organizador, confirmamos y eximimos pago
+      payment_status: opts?.asOrganizer ? ("waived" as const) : ("pending" as const),
+      payment_amount: opts?.asOrganizer ? 0 : (activity.priceEUR || 0),
+      is_confirmed: !!opts?.asOrganizer,
       deleted: false,
       created_at: nowIso(),
       updated_at: nowIso(),
