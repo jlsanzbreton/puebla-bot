@@ -36,3 +36,30 @@ Este es un _starter_ mínimo para una PWA que funcione **sin conexión** con un 
 
 - Tras actualizar archivos, puede quedar una versión antigua en caché. Usa el enlace “Borrar datos locales” en el pie y recarga.
 - Si `content/kb-pack.json` no aparece actualizado, comprueba `content/version.json` y pulsa “Buscar actualizaciones”.
+
+## ¿Qué hacer si la build falla?
+
+Si encuentras errores raros al ejecutar `npm run build` (exports que faltan, errores ESM/CJS, módulos temporales corruptos), sigue estos pasos:
+
+1. Elimina dependencias y artefactos temporales e instala de nuevo:
+
+```bash
+# elimina node_modules, lockfile, caché temporal, y reinstala
+rm -rf node_modules package-lock.json node_modules/.vite-temp dist && npm install
+```
+
+2. Si usas CI o quieres una instalación reproducible, ejecuta:
+
+```bash
+npm ci
+```
+
+3. Limpiar sólo la caché temporal de Vite (rápido):
+
+```bash
+rm -rf node_modules/.vite-temp
+```
+
+4. Si el problema persiste en una rama concreta, revisa cambios en `package.json` entre ramas y considera bloquear (o actualizar) la versión del plugin que causa el conflicto.
+
+Si quieres, puedo añadir un script adicional o un archivo CONTRIBUTING.md con estos pasos más detallados.
