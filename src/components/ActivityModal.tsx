@@ -137,25 +137,50 @@ export function ActivityModal({
         </div>
 
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <div style={{display: 'flex', gap: 8, alignItems: 'center', width: '100%', marginBottom: 8}}>
-            <label style={{display:'flex',gap:8,alignItems:'center'}}>
-              <input type="radio" checked={action==='self'} onChange={() => setAction('self')} /> Yo
-            </label>
-            <label style={{display:'flex',gap:8,alignItems:'center'}}>
-              <input type="radio" checked={action==='other'} onChange={() => setAction('other')} /> Otra persona
-            </label>
-            <label style={{display:'flex',gap:8,alignItems:'center'}}>
-              <input type="radio" checked={action==='organizer'} onChange={() => setAction('organizer')} disabled={!isAdmin} /> Como organizador
-            </label>
+          {/* Action selector: clearer button group instead of small radios */}
+          <div className="flex gap-2 w-full mb-3" role="tablist" aria-label="Tipo de inscripción">
+            <button
+              type="button"
+              onClick={() => setAction('self')}
+              className={`px-3 py-2 rounded-lg border ${action === 'self' ? 'bg-sky-600 text-white border-sky-600' : 'bg-neutral-100 dark:bg-neutral-800'} `}
+              aria-pressed={action === 'self'}
+            >
+              Yo
+            </button>
+            <button
+              type="button"
+              onClick={() => setAction('other')}
+              className={`px-3 py-2 rounded-lg border ${action === 'other' ? 'bg-sky-600 text-white border-sky-600' : 'bg-neutral-100 dark:bg-neutral-800'}`}
+              aria-pressed={action === 'other'}
+            >
+              Otra persona
+            </button>
+            <button
+              type="button"
+              onClick={() => setAction('organizer')}
+              disabled={!isAdmin}
+              className={`px-3 py-2 rounded-lg border ${action === 'organizer' ? 'bg-sky-600 text-white border-sky-600' : 'bg-neutral-100 dark:bg-neutral-800'} ${!isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-pressed={action === 'organizer'}
+            >
+              Como organizador
+            </button>
           </div>
           {action === 'other' && (
-            <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
-              <select value={selectedParticipant ?? ''} onChange={e => setSelectedParticipant(e.target.value)}>
-                <option value="">-- seleccionar --</option>
-                {myParticipants.map(p => <option key={p.id} value={p.id}>{p.display_name}</option>)}
-              </select>
-              <input placeholder="Añadir nombre" value={newName} onChange={e => setNewName(e.target.value)} />
-              <button onClick={addAndSelect} className="outline small">Añadir</button>
+            <div className="flex gap-2 items-center mb-3 w-full">
+              <div className="flex-1">
+                <label className="text-xs">Selecciona persona</label>
+                <select value={selectedParticipant ?? ''} onChange={e => setSelectedParticipant(e.target.value)} className="w-full mt-1">
+                  <option value="">-- seleccionar --</option>
+                  {myParticipants.map(p => <option key={p.id} value={p.id}>{p.display_name}</option>)}
+                </select>
+              </div>
+              <div style={{width:160}}>
+                <label className="text-xs">Añadir nombre</label>
+                <div className="flex gap-2 mt-1">
+                  <input className="flex-1" placeholder="Añadir nombre" value={newName} onChange={e => setNewName(e.target.value)} />
+                  <button onClick={addAndSelect} className="outline small">Añadir</button>
+                </div>
+              </div>
             </div>
           )}
           {!isJoined ? (

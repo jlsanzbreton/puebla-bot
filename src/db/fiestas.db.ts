@@ -22,6 +22,9 @@ export type Registration = {
   payment_amount?: number;
   payment_method?: "cash" | "bizum" | "other";
   is_confirmed: boolean;
+  // local-only flag: true when the registration was created locally but no
+  // authenticated session was available to push it to the server yet.
+  pending_auth?: boolean;
   deleted: boolean;
   created_at: string;
   updated_at: string;

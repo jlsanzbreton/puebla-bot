@@ -85,7 +85,7 @@ export function useRegistrations() {
     const existing = await db.registrations
       .where({ event_id: activity.id, participant_id: participant.id })
       .first();
-    if (existing) {
+  if (existing) {
       if (existing.deleted) {
         const patch = { deleted: false, updated_at: nowIso() } as const;
         await db.registrations.update(existing.id, patch);
@@ -98,13 +98,18 @@ export function useRegistrations() {
         if (typeof document !== "undefined") {
           try { document.dispatchEvent(new CustomEvent('outbox-changed')); } catch {}
         }
+        // If no session, mark the registration pending_auth locally
+        const sessionNow = await getSessionInfo();
+        if (!sessionNow.userId) {
+          await db.registrations.update(existing.id, { pending_auth: true } as any);
+        }
         // Disparar sync en background si hay conexión
         if (typeof navigator !== "undefined" && navigator.onLine) void syncAll();
       }
       return existing.id;
     }
 
-    const registration = {
+  const registration: any = {
       id: uuidv4(),
       event_id: activity.id,
       participant_id: participant.id,
@@ -120,7 +125,10 @@ export function useRegistrations() {
       updated_at: nowIso(),
     };
 
-    await db.registrations.add(registration);
+  // If there is no authenticated session, mark registration pending_auth
+  const willPushNow = !!currentUserId;
+  if (!willPushNow) registration.pending_auth = true;
+  await db.registrations.add(registration);
     await db.outbox.add({
       id: uuidv4(),
       table: "registrations",
@@ -132,10 +140,38 @@ export function useRegistrations() {
       try { document.dispatchEvent(new CustomEvent('outbox-changed')); } catch {}
     }
     // Lanzar sync en background si hay conexión
-    if (typeof navigator !== "undefined" && navigator.onLine) void syncAll();
+  if (typeof navigator !== "undefined" && navigator.onLine) {
+      // If no current user, syncAll will skip pushing outbox; still trigger it
+      // so that when auth completes it can retry on 'auth-stable'.
+      void syncAll();
+    }
 
     return registration.id;
   }, [isLoading, ensureSelfParticipant]);
+
+  // Listen for auth-stable to attempt re-sync of registrations marked pending_auth
+  useEffect(() => {
+    const onAuthStable = async () => {
+      try {
+        // Attempt a sync which will push outbox now that auth should be settled
+        await syncAll();
+        // Clear pending_auth flags for registrations that were pushed (best-effort)
+        // If they still exist in outbox, leave the flag for next attempt.
+        const pending = await db.registrations.where('pending_auth').equals(1).toArray();
+        for (const r of pending) {
+          // check whether there is a matching outbox item for this registration
+          const exists = await db.outbox.where('table').equals('registrations').and(o => o.payload && (o.payload.p_participant_id === r.participant_id || o.payload.participant_id === r.participant_id)).first();
+          if (!exists) {
+            await db.registrations.update(r.id, { pending_auth: false } as any);
+          }
+        }
+      } catch (e) {
+        // noop: we'll retry on subsequent auth-stable events
+      }
+    };
+  try { document.addEventListener('auth-stable', onAuthStable); } catch {}
+  return () => { try { document.removeEventListener('auth-stable', onAuthStable); } catch {} };
+  }, []);
 
   // 5. Función para borrarse de una actividad
   const leaveActivity = useCallback(async (activity: Activity) => {

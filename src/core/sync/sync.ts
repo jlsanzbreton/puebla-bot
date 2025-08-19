@@ -19,6 +19,37 @@ export async function pushOutbox() {
     return;
   }
 
+  // If the document is not focused, wait briefly for focus to return.
+  // This helps avoid racing with auth redirects that set session tokens
+  // while the page is in background or during navigation.
+  try {
+    if (typeof document !== 'undefined' && !document.hasFocus()) {
+      const waitForFocus = new Promise<void>((resolve) => {
+        let resolved = false;
+        const onFocus = () => { if (!resolved) { resolved = true; window.removeEventListener('focus', onFocus); resolve(); } };
+        window.addEventListener('focus', onFocus);
+        // fallback timeout
+        setTimeout(() => { if (!resolved) { resolved = true; window.removeEventListener('focus', onFocus); resolve(); } }, 2000);
+      });
+      console.debug('pushOutbox: document not focused, waiting up to 2s for focus');
+      await waitForFocus;
+      console.debug('pushOutbox: resumed after focus wait');
+      // If an auth redirect just happened, wait briefly for auth-stable event
+      try {
+        const waitAuthStable = new Promise<void>((resolve) => {
+          let resolved = false;
+          const onAuth = () => { if (!resolved) { resolved = true; document.removeEventListener('auth-stable', onAuth); resolve(); } };
+          document.addEventListener('auth-stable', onAuth);
+          setTimeout(() => { if (!resolved) { resolved = true; document.removeEventListener('auth-stable', onAuth); resolve(); } }, 1000);
+        });
+        console.debug('pushOutbox: waiting up to 1s for auth-stable event');
+        await waitAuthStable;
+      } catch (e) {}
+    }
+  } catch (e) {
+    // ignore focus instrumentation failures
+  }
+
   const items = await db.outbox.orderBy("created_at").toArray();
   for (const it of items) {
     try {

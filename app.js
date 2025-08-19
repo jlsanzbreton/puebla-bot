@@ -67,6 +67,7 @@ async function processSupabaseRedirect() {
   const target = location.origin + location.pathname + "#/fiestas";
   history.replaceState({}, "", target);
   console.debug("[auth] URL cleaned to", target);
+  try { if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('auth-stable')); } catch {}
   console.log("Exiting processSupabaseRedirect");
 }
 // End of processSupabaseRedirect function
